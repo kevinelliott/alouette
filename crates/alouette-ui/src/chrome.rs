@@ -175,6 +175,32 @@ pub fn truncate(s: &str, max: usize) -> String {
     out
 }
 
+/// Cut `s` to exactly `w` columns, with an ellipsis when it is too long.
+pub fn fit(s: &str, w: usize) -> String {
+    let clean = |c: char| if c.is_control() { ' ' } else { c };
+    let total: usize = s.chars().map(|c| unicode_width::UnicodeWidthChar::width(clean(c)).unwrap_or(0)).sum();
+    if total <= w {
+        return format!("{}{}", s.chars().map(clean).collect::<String>(), " ".repeat(w - total));
+    }
+    if w == 0 {
+        return String::new();
+    }
+    // Leave the last column for the ellipsis.
+    let mut out = String::new();
+    let mut used = 0;
+    for c in s.chars().map(clean) {
+        let cw = unicode_width::UnicodeWidthChar::width(c).unwrap_or(0);
+        if used + cw > w - 1 {
+            break;
+        }
+        out.push(c);
+        used += cw;
+    }
+    out.push('…');
+    out.push_str(&" ".repeat(w - 1 - used));
+    out
+}
+
 /// The tab bar for the Tabs layout. Returns each tab's clickable area.
 pub fn tab_bar(buf: &mut Buffer, area: Rect, tabs: &[(String, bool)], theme: &Theme) -> Vec<Rect> {
     let base = Style::new().fg(theme.status_fg).bg(theme.status_bg);

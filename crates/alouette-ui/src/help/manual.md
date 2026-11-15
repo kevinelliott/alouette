@@ -52,6 +52,16 @@ Gmail and Microsoft 365 sign in with OAuth, which needs an app of your own: crea
 
 Mail is not saved on this computer unless you set mail.offline_cache = true, which keeps folder lists, message lists and the messages you open, so you can read them without a connection. Pictures in HTML mail are never fetched.
 
+## News
+
+news: opens your first news server, saved under [[news.servers]] with its host (port 563 for TLS) and, if it needs one, your login. nntps://host/ opens a server that is not saved; it is saved once you pick a group there. Press L to list every group on the server, type to narrow the list, and Enter to add one. D removes a group.
+
+Enter opens a group and then an article. Space pages through an article and then goes on to the next unread one, as newsreaders always have; n jumps to the next unread. u marks an article read or unread and c catches up on the whole group. p posts a new article, f follows up in the group, and r replies to the author by mail. Set your name and address under [news], or Alouette uses your first mail account's.
+
+## Feeds
+
+feeds: shows the feeds you follow on the left and their items on the right. Press a and type a feed's address, or just a site's: Alouette finds the feed the page points to. Enter reads an item, Space goes through the unread ones, o opens the item's link, m marks a feed read, D stops following it and g refreshes. Feeds refresh by themselves every feeds.refresh_mins minutes. feed:URL shows one feed without following it; press s to follow it.
+
 ## Configuration
 
 Settings live in alouette.toml. Run "alouette config path" to find it. Alouette reloads the file as soon as you save it. The Settings window changes common options for you and saves the file.

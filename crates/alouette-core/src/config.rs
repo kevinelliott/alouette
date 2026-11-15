@@ -370,6 +370,62 @@ impl Default for Mail {
     }
 }
 
+/// The News module: Usenet over NNTP.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct News {
+    /// Your name and address on articles you post.
+    pub name: Option<String>,
+    pub email: Option<String>,
+    /// The most articles to fetch from one group at a time.
+    pub max_articles: u64,
+    pub servers: Vec<NewsServer>,
+}
+
+impl Default for News {
+    fn default() -> Self {
+        Self { name: None, email: None, max_articles: 500, servers: vec![] }
+    }
+}
+
+/// A news server. Passwords live in the secret store.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct NewsServer {
+    pub name: String,
+    /// `host[:port]`. Port 563 (the default) uses TLS from the start; 119 uses STARTTLS
+    /// when offered.
+    pub host: String,
+    /// The login, if the server needs one.
+    pub user: Option<String>,
+    /// Groups you read, in order.
+    pub groups: Vec<String>,
+}
+
+/// The Feeds module: RSS, Atom and JSON Feed.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Feeds {
+    /// Fetch feeds this often while the window is open, in minutes.
+    pub refresh_mins: u64,
+    pub subscriptions: Vec<FeedSub>,
+}
+
+impl Default for Feeds {
+    fn default() -> Self {
+        Self { refresh_mins: 60, subscriptions: vec![] }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct FeedSub {
+    pub url: String,
+    /// Shown instead of the feed's own title.
+    pub title: Option<String>,
+    pub folder: Option<String>,
+}
+
 /// How an account connects.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
@@ -424,6 +480,8 @@ pub struct Config {
     pub ssh: Ssh,
     pub files: Files,
     pub mail: Mail,
+    pub news: News,
+    pub feeds: Feeds,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,

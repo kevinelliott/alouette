@@ -1,0 +1,31 @@
+[package]
+name = "mod-news"
+description = "Alouette's News and Feeds modules: Usenet over NNTP, and RSS, Atom and JSON Feed"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-ui.workspace = true
+alouette-net.workspace = true
+alouette-store.workspace = true
+alouette-mail.workspace = true
+alouette-feeds.workspace = true
+proto-nntp.workspace = true
+mail-builder = "0.4"
+crossterm.workspace = true
+ratatui.workspace = true
+serde = { workspace = true }
+serde_json.workspace = true
+time.workspace = true
+tokio = { workspace = true, features = ["sync", "time"] }
+url.workspace = true
+unicode-width.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros", "rt", "net"] }
+proto-nntp = { workspace = true, features = ["test-server"] }

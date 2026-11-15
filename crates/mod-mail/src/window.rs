@@ -145,24 +145,7 @@ fn long_date(t: Option<i64>, offset: time::UtcOffset) -> String {
     format!("{:?}, {} {:?} {} {:02}:{:02}", d.weekday(), d.day(), d.month(), d.year(), d.hour(), d.minute())
 }
 
-/// Cut `s` to `w` columns.
-fn fit(s: &str, w: usize) -> String {
-    let mut out = String::new();
-    let mut used = 0;
-    for c in s.chars() {
-        let cw = unicode_width::UnicodeWidthChar::width(c).unwrap_or(0);
-        if used + cw > w {
-            if w > 0 && used < w {
-                out.push('…');
-            }
-            return out;
-        }
-        out.push(if c.is_control() { ' ' } else { c });
-        used += cw;
-    }
-    out.push_str(&" ".repeat(w - used));
-    out
-}
+use alouette_ui::chrome::fit;
 
 impl MailWindow {
     pub fn new(account: MailAccount, shared: Shared, cache_dir: Option<std::path::PathBuf>, cx: &mut Cx) -> Self {

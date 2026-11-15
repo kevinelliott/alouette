@@ -1,0 +1,21 @@
+[package]
+name = "proto-nntp"
+description = "A small async NNTP reader client (RFC 3977, 4643, 4642) for Alouette's News module"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+tokio = { workspace = true, features = ["io-util"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "net", "macros", "rt"] }
+proto-nntp = { path = ".", features = ["test-server"] }
+
+[features]
+# An in-memory NNTP server for tests in this and other crates.
+test-server = ["tokio/net", "tokio/rt", "tokio/sync"]

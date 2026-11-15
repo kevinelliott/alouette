@@ -10,7 +10,6 @@
 pub mod bridge;
 pub mod cache;
 pub mod compose;
-pub mod editor;
 pub mod setup;
 pub mod window;
 

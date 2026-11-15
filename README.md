@@ -7,13 +7,13 @@ news and feeds, Gopher and Gemini, search and lookups, file transfer, SSH and Te
 network tools, contacts, a calendar, chat, the fediverse and an optional AI assistant, all in one
 window manager.
 
-> **Status: milestone M3 (Mail).** The shell, the network layer and six modules
+> **Status: milestone M4 (News and social).** The shell, the network layer and eight modules
 > work today: **Burrow** (Gopher, Gemini, Finger), **Inquire** (one box that asks DNS, RDAP, WHOIS,
 > BGP, certificate logs, WebFinger, OpenPGP WKD, DICT, Veronica-2 and Gemini search at once),
 > **NetTools** (ping, traceroute, DNS, ports, TLS inspection, mDNS), **Terminal** (local shells,
 > SSH, Telnet, Mosh), **Files** (two panes over local disks, SFTP, FTP/FTPS, WebDAV and S3) and
-> **Mail** (IMAP and SMTP, JMAP, Gmail and Microsoft 365). News and the rest arrive milestone by
-> milestone; see the plan below.
+> **Mail** (IMAP and SMTP, JMAP, Gmail and Microsoft 365), **News** (Usenet over NNTP) and
+> **Feeds** (RSS, Atom and JSON Feed). The rest arrive milestone by milestone; see the plan below.
 
 ## Try it
 
@@ -36,6 +36,8 @@ downloads and watch them in the Tasks window, where you can cancel and retry the
 | Terminal | `term:`, `ssh:`, `ssh://me@host`, `telnet://telehack.com` | A VT220/xterm terminal for local shells, SSH, Telnet and Mosh. SSH reads `~/.ssh/config`, uses your agent and keys, checks `known_hosts`, hops through `ProxyJump` hosts and forwards ports, with post-quantum key exchange first. Ctrl+] then a key gives that key to Alouette. |
 | Files | `files:`, `sftp://me@host/`, `ftp://ftp.gnu.org/gnu/`, `davs://host/dav/`, `s3://bucket/` | Two panes, each on a local folder or a server. Copy whole folders either way in the background, make folders, rename and delete. A folder's README is shown as you arrive. FTPS (explicit and implicit), WebDAV (Nextcloud and friends) and S3 (AWS, MinIO, R2) with SigV4. |
 | Mail | `mail:`, `mail:setup`, `mailto:someone@example.org` | Folders, a message list and a reader in one window, and a separate window for writing. Reply, reply all, forward, star, archive, move, delete to Trash and filter. New mail arrives through IMAP IDLE. IMAP and SMTP with passwords, JMAP (Fastmail, Stalwart), and Gmail and Microsoft 365 signed in with OAuth using your own app's client ID. Passwords and tokens go to the system keychain. An offline copy is off unless you turn on `mail.offline_cache`. |
+| News | `news:`, `nntps://news.example.org/comp.lang.rust` | Usenet the way Minuet read it, with threads. Lists every group on the server to pick from, keeps track of what you have read, pages with Space through unread articles, posts and follows up, and replies by mail. NNTPS or STARTTLS, and AUTHINFO sign-in with the password in your keychain. |
+| Feeds | `feeds:`, `feed:https://blog.rust-lang.org/feed.xml` | RSS, Atom and JSON Feed, with podcast enclosures. Type a site's address and Alouette finds its feed. Refreshes in the background and remembers what you have read. |
 
 ## Three layouts, one set of windows
 

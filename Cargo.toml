@@ -33,12 +33,15 @@ alouette-term = { path = "crates/alouette-term", version = "0.1.0" }
 proto-telnet = { path = "crates/proto-telnet", version = "0.1.0" }
 proto-ftp = { path = "crates/proto-ftp", version = "0.1.0" }
 proto-imap = { path = "crates/proto-imap", version = "0.1.0" }
+alouette-feeds = { path = "crates/alouette-feeds", version = "0.1.0" }
+proto-nntp = { path = "crates/proto-nntp", version = "0.1.0" }
 proto-smtp = { path = "crates/proto-smtp", version = "0.1.0" }
 alouette-vfs = { path = "crates/alouette-vfs", version = "0.1.0" }
 alouette-mail = { path = "crates/alouette-mail", version = "0.1.0" }
 alouette-ssh = { path = "crates/alouette-ssh", version = "0.1.0" }
 mod-terminal = { path = "crates/mod-terminal", version = "0.1.0" }
 mod-files = { path = "crates/mod-files", version = "0.1.0" }
+mod-news = { path = "crates/mod-news", version = "0.1.0" }
 mod-mail = { path = "crates/mod-mail", version = "0.1.0" }
 serde_json = "1"
 x509-parser = "0.18"

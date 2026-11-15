@@ -79,6 +79,7 @@ dependencies = [
  "mod-inquire",
  "mod-mail",
  "mod-nettools",
+ "mod-news",
  "mod-terminal",
  "ratatui",
  "rcgen",
@@ -103,6 +104,17 @@ dependencies = [
  "tokio",
  "tokio-util",
  "toml",
+ "url",
+]
+
+[[package]]
+name = "alouette-feeds"
+version = "0.1.0"
+dependencies = [
+ "quick-xml",
+ "serde",
+ "serde_json",
+ "time",
  "url",
 ]
 
@@ -2579,6 +2591,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "mod-news"
+version = "0.1.0"
+dependencies = [
+ "alouette-core",
+ "alouette-feeds",
+ "alouette-mail",
+ "alouette-net",
+ "alouette-store",
+ "alouette-ui",
+ "crossterm",
+ "mail-builder",
+ "proto-nntp",
+ "ratatui",
+ "serde",
+ "serde_json",
+ "time",
+ "tokio",
+ "unicode-width",
+ "url",
+]
+
+[[package]]
 name = "mod-terminal"
 version = "0.1.0"
 dependencies = [
@@ -3400,6 +3434,15 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "proto-imap",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
+name = "proto-nntp"
+version = "0.1.0"
+dependencies = [
+ "proto-nntp",
  "thiserror 2.0.21",
  "tokio",
 ]

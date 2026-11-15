@@ -45,7 +45,7 @@ impl TextPage {
             Row::Text(
                 "Alouette brings mail, news, Gopher and Gemini, file transfer, terminals, the web \
                  and more into one terminal app, in the spirit of Minuet (1994). Burrow (Gopher, Gemini \
-                 and Finger), Inquire, NetTools, Terminal, Files and Mail are here now; the other modules \
+                 and Finger), Inquire, NetTools, Terminal, Files, Mail, News and Feeds are here now; the other modules \
                  follow milestone by milestone."
                     .into(),
             ),
@@ -68,6 +68,7 @@ impl TextPage {
             Row::Text("• Open Modules > Terminal > SSH to pick a host from your ~/.ssh/config.".into()),
             Row::Text("• Open Modules > Files > FTP archive to browse ftp.gnu.org beside your home folder.".into()),
             Row::Text("• Open Modules > Mail > Add a mail account to read your mail here.".into()),
+            Row::Text("• Open Modules > Feeds > Rust blog, then press s to follow it.".into()),
             Row::Text("• Type \"theme\" in the palette and try amber, green or modern-dark.".into()),
             Row::Text("• Open Settings to switch layouts, keymaps and nostalgia touches.".into()),
             Row::Text("• Click and drag window titles. The mouse works everywhere.".into()),

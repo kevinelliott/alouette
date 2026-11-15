@@ -16,19 +16,19 @@ expression: "render_to_string(&mut app(LayoutKind::Tiled, KeymapPreset::Cua), 10
 │ transfer, terminals, the web and more into one     █││                                           │
 │ terminal app, in the spirit of Minuet (1994).      █││                                           │
 │ Burrow (Gopher, Gemini and Finger), Inquire,       █││                                           │
-│ NetTools, Terminal, Files and Mail are here now;   █│└───────────────────────────────────────────┘
-│ the other modules follow milestone by milestone.   ║│╔════════ Demo: background jobs ═════════ 3 ╗
-│                                                    ║│║Start a job. It runs in the background whil║
-│ Getting around                                     ║│║                                           ║
-│   ^K            Command palette: every command,    ║│║  d  Download    a 6 second fake download w║
-│ window, theme and URL                              ║│║  f  Failing job fails half way, so you can║
-│   F10           Menu bar (or Alt plus the red      ║│║  l  Long job    runs until cancelled, with║
-│ letter)                                            ║│║  b  Burst       starts five short download║
-│   F3            Open a URL, such as about:tasks or ║│║                                           ║
-│ demo:jobs                                          ║│║  t  opens the Tasks window to cancel (c) o║
+│ NetTools, Terminal, Files, Mail, News and Feeds are║│└───────────────────────────────────────────┘
+│ here now; the other modules follow milestone by    ║│╔════════ Demo: background jobs ═════════ 3 ╗
+│ milestone.                                         ║│║Start a job. It runs in the background whil║
+│                                                    ║│║                                           ║
+│ Getting around                                     ║│║  d  Download    a 6 second fake download w║
+│   ^K            Command palette: every command,    ║│║  f  Failing job fails half way, so you can║
+│ window, theme and URL                              ║│║  l  Long job    runs until cancelled, with║
+│   F10           Menu bar (or Alt plus the red      ║│║  b  Burst       starts five short download║
+│ letter)                                            ║│║                                           ║
+│   F3            Open a URL, such as about:tasks or ║│║  t  opens the Tasks window to cancel (c) o║
+│ demo:jobs                                          ║│║                                           ║
 │   F6            Next window                        ║│║                                           ║
 │   Ctrl-F6       Switch layout: Desktop, Tiled, Tabs║│║                                           ║
-│   F5            Zoom the window                    ║│║                                           ║
-│   Ctrl-F5       Move or resize with the arrow keys ▼│║                                           ║
+│   F5            Zoom the window                    ▼│║                                           ║
 └─────────────────────────────────────────────────────┘╚═══════════════════════════════════════════╝
  F1 Help  F10 Menu  ^K Palette  d Download  f Fail  l Long  b Burst  t Tasks         tiled  │ 12:00

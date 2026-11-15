@@ -16,9 +16,9 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
 
 use crate::bridge::{self, send};
-use crate::editor::Editor;
 use crate::window::{Kind, Msg, next_id};
 use crate::{MODULE, Pending, Shared};
+use alouette_ui::editor::Editor;
 
 const LABELS: [&str; 4] = ["To", "Cc", "Bcc", "Subject"];
 const BODY: usize = 4;

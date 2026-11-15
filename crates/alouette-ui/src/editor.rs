@@ -1,4 +1,4 @@
-//! A small multi-line editor with soft wrapping, for writing mail.
+//! A small multi-line editor with soft wrapping, for writing mail, news and posts.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use unicode_width::UnicodeWidthChar;

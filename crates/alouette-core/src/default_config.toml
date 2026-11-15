@@ -101,6 +101,22 @@ poll_secs = 300               # how often to check when the server cannot push n
 # For gmail and m365, register your own OAuth app and set client_id (and client_secret for
 # Google). The server names are filled in for you.
 
+[news]
+max_articles = 500            # the most articles to fetch from one group at a time
+# name = "Your Name"          # shown on articles you post
+# email = "you@example.org"
+# [[news.servers]]
+# name = "eternal"
+# host = "news.eternal-september.org:563"
+# user = "you"
+# groups = ["comp.lang.rust", "alt.folklore.computers"]
+
+[feeds]
+refresh_mins = 60             # fetch feeds this often while the Feeds window is open
+# [[feeds.subscriptions]]
+# url = "https://blog.rust-lang.org/feed.xml"
+# folder = "Rust"
+
 [keys]
 # Override any key binding. Examples:
 # palette = "ctrl+p"
