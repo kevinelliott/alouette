@@ -46,9 +46,21 @@ enabled = false
 
 [network]
 prefer_ipv6 = true
-# "system", "doh", "dot" or "doq".
+# "system", "doh" (DNS over HTTPS), "dot" (over TLS) or "doq" (over QUIC).
 dns = "system"
+# For encrypted DNS: "cloudflare", "quad9", "google", or "IP#name".
+# dns_server = "quad9"
+# Default proxy: "socks5://host:port", "socks5h://host:port" or "http://host:port".
+# proxy = "socks5h://127.0.0.1:9050"
 connect_timeout_secs = 15
+# Lowest TLS version to accept: "1.2" or "1.3". Post-quantum key exchange
+# (X25519MLKEM768) is always offered first.
+tls_min = "1.2"
+
+# Routing rules are checked in order. For example, send .onion names through Tor:
+# [[network.routes]]
+# hosts = ["*.onion"]
+# via = "socks5h://127.0.0.1:9050"
 
 [keys]
 # Override any key binding. Examples:

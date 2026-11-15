@@ -225,18 +225,42 @@ pub struct Network {
     pub prefer_ipv6: bool,
     /// `system`, `doh`, `dot` or `doq`.
     pub dns: String,
-    /// DNS server or DoH URL when `dns` is not `system`.
+    /// For encrypted DNS: `cloudflare`, `quad9`, `google`, or `IP#name` such as
+    /// `9.9.9.9#dns.quad9.net`.
     pub dns_server: Option<String>,
-    /// Proxy URL: `http://host:port`, `socks5://host:port`, or `system`.
+    /// Default proxy for everything: `socks5://host:port`, `socks5h://host:port` (the proxy
+    /// resolves names, as Tor needs) or `http://host:port`. Unset means direct.
     pub proxy: Option<String>,
     /// Connect timeout in seconds.
     pub connect_timeout_secs: u64,
+    /// Lowest TLS version to accept: `1.2` or `1.3`.
+    pub tls_min: String,
+    /// Per-host routing rules, checked in order before `proxy`.
+    pub routes: Vec<Route>,
 }
 
 impl Default for Network {
     fn default() -> Self {
-        Self { prefer_ipv6: true, dns: "system".into(), dns_server: None, proxy: None, connect_timeout_secs: 15 }
+        Self {
+            prefer_ipv6: true,
+            dns: "system".into(),
+            dns_server: None,
+            proxy: None,
+            connect_timeout_secs: 15,
+            tls_min: "1.2".into(),
+            routes: vec![],
+        }
     }
+}
+
+/// Send some hosts a different way, for example `.onion` names through Tor.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Route {
+    /// Host patterns: `example.org`, `*.example.org`, `*.onion` or `*`.
+    pub hosts: Vec<String>,
+    /// `direct`, or a proxy URL as in `proxy`.
+    pub via: String,
 }
 
 /// The whole configuration file.

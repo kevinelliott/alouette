@@ -8,7 +8,8 @@ network tools, contacts, a calendar, chat, the fediverse and an optional AI assi
 window manager.
 
 > **Status: milestone M0 (foundation).** The shell works: windows, layouts, menus, the command
-> palette, themes, key bindings, background tasks, config hot reload, history and secrets.
+> palette, themes, key bindings, background tasks, config hot reload, history and secrets, plus
+> the shared network layer every module will connect through.
 > The internet modules arrive from M1 on. See the plan below.
 
 ## Try it
@@ -67,6 +68,28 @@ built-in one and override any color.
 Every nostalgia touch (splash screen, desktop pattern, shadows, sounds, Minuet module names,
 tips) can be switched off one by one, or all at once with `nostalgia.enabled = false`.
 
+## Network
+
+Every module connects through one layer, configured in `[network]`:
+
+- IPv6 and IPv4 raced with Happy Eyeballs (RFC 8305).
+- TLS 1.3 offering the hybrid post-quantum X25519MLKEM768 key exchange first. TLS 1.2 stays
+  available for older servers unless `tls_min = "1.3"`. Certificates are checked against the
+  operating system's trust store; Gemini-style trust on first use is available to modules.
+- Encrypted DNS: `dns = "doh"`, `"dot"` or `"doq"` with Cloudflare, Quad9, Google or your own server.
+- SOCKS5 (with remote DNS for Tor) and HTTP CONNECT proxies, globally or per host. `.onion`
+  names never leak to DNS: without a Tor route they are refused.
+
+`alouette probe example.org:443` shows exactly how a connection was made:
+
+```text
+via      direct
+peer     [2606:2800:21f:cb07:6820:80da:af6b:8b2c]:443
+tls      TLS 1.3 · TLS13_AES_256_GCM_SHA384 · X25519MLKEM768
+pq       yes (hybrid ML-KEM)
+badge    IPv6 · TLS 1.3 · PQ
+```
+
 ## Plan
 
 | Milestone | Brings |
@@ -93,6 +116,7 @@ Rust 1.88 or newer. `cargo test --workspace` runs every test, including screen s
 | `alouette` | The binary and command line |
 | `alouette-core` | Events, background tasks, URL routing, config, paths |
 | `alouette-store` | SQLite state (history, bookmarks) and the OS keychain |
+| `alouette-net` | Happy Eyeballs, TLS 1.3 with post-quantum key exchange, DoH/DoT/DoQ, SOCKS5 and HTTP proxies, routing rules |
 | `alouette-ui` | Window manager, layouts, menus, palette, themes, keymaps, built-in pages |
 | `alouette-nostalgia` | Splash art, tips and Minuet history |
 | `mod-demo` | A small example module |

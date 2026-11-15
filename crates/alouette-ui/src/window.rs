@@ -81,6 +81,8 @@ pub struct Cx<'a> {
     pub config: &'a Config,
     pub keymap: &'a Keymap,
     pub tasks: &'a TaskManager,
+    /// The shared network connector. Clone it into background tasks.
+    pub net: &'a alouette_net::Net,
     pub store: Option<&'a Store>,
     pub secrets_backend: &'a str,
     pub config_path: &'a std::path::Path,
@@ -141,6 +143,12 @@ pub trait Window: Send {
     /// Short key hints for the status line while this window has focus.
     fn hints(&self) -> Vec<(&'static str, &'static str)> {
         Vec::new()
+    }
+
+    /// How the window's current connection was made, such as `IPv6 · TLS 1.3 · PQ`.
+    /// Shown in the status line while the window has focus.
+    fn badge(&self) -> Option<String> {
+        None
     }
 
     /// True while the window is typing text, so the shell leaves plain keys alone.

@@ -59,6 +59,7 @@ pub struct App {
     dialog: Option<Dialog>,
     notifications: Vec<Notification>,
     pub tasks: TaskManager,
+    pub net: alouette_net::Net,
     router: Router,
     modules: Vec<Box<dyn Module>>,
     store: Option<Store>,
@@ -76,6 +77,17 @@ pub struct App {
     last_minute: i64,
     pub dirty: bool,
     pub quit: bool,
+}
+
+/// The connector for these settings, or the defaults plus an error to show.
+fn build_net(cfg: &alouette_core::config::Network) -> (alouette_net::Net, Option<String>) {
+    match alouette_net::Net::new(cfg) {
+        Ok(n) => (n, None),
+        Err(e) => {
+            let fallback = alouette_net::Net::new(&Default::default()).expect("default network settings are valid");
+            (fallback, Some(format!("{e}. Using direct connections and system DNS.")))
+        }
+    }
 }
 
 const MENU_ROW: u16 = 1;
@@ -103,6 +115,7 @@ impl App {
             dialog: None,
             notifications: vec![],
             tasks: TaskManager::new(tx.clone()),
+            net: build_net(&opts.config.network).0,
             router,
             modules: opts.modules,
             store: opts.store,
@@ -127,6 +140,9 @@ impl App {
             config: opts.config,
             config_path: opts.config_path,
         };
+        if let Some(e) = build_net(&app.config.network).1 {
+            app.notify(Notification::error(e));
+        }
         for e in app.themes.errors.clone() {
             app.notify(Notification::warning(e));
         }
@@ -195,6 +211,13 @@ impl App {
                 self.notify(Notification::warning(e));
             }
         }
+        if cfg.network != self.config.network {
+            let (net, err) = build_net(&cfg.network);
+            self.net = net;
+            if let Some(e) = err {
+                self.notify(Notification::error(e));
+            }
+        }
         self.wm.layout = cfg.general.layout;
         self.config = cfg;
         self.rebuild_menus();
@@ -243,12 +266,13 @@ impl App {
         }
         let Some(idx) = self.modules.iter().position(|m| m.id() == route.module) else { return };
         let (result, effects) = {
-            let App { modules, theme, config, keymap, tasks, store, secrets, config_path, .. } = self;
+            let App { modules, theme, config, keymap, tasks, net, store, secrets, config_path, .. } = self;
             let mut cx = Cx {
                 theme,
                 config,
                 keymap,
                 tasks,
+                net,
                 store: store.as_ref(),
                 secrets_backend: secrets.backend(),
                 config_path,
@@ -305,13 +329,14 @@ impl App {
     /// Run a closure on one window with a fresh context, then apply its effects.
     fn with_window<R>(&mut self, id: WinId, f: impl FnOnce(&mut dyn Window, &mut Cx) -> R) -> Option<R> {
         let (r, effects) = {
-            let App { wm, theme, config, keymap, tasks, store, secrets, config_path, .. } = self;
+            let App { wm, theme, config, keymap, tasks, net, store, secrets, config_path, .. } = self;
             let m = wm.get_mut(id)?;
             let mut cx = Cx {
                 theme,
                 config,
                 keymap,
                 tasks,
+                net,
                 store: store.as_ref(),
                 secrets_backend: secrets.backend(),
                 config_path,
@@ -1009,11 +1034,12 @@ impl App {
             let i = if self.deterministic {
                 0
             } else {
-                (Instant::now().elapsed().as_millis() as usize
-                    + time::OffsetDateTime::now_utc().millisecond() as usize / 250)
-                    % 4
+                (time::OffsetDateTime::now_utc().unix_timestamp_nanos() / 250_000_000) as usize % 4
             };
             right.push_str(&format!("{} {running} task{}  │ ", SPIN[i], if running == 1 { "" } else { "s" }));
+        }
+        if let Some(b) = self.wm.focused().and_then(|id| self.wm.get(id)).and_then(|m| m.win.badge()) {
+            right.push_str(&format!("{b}  │ "));
         }
         right.push_str(self.wm.layout.name());
         if self.config.general.clock {

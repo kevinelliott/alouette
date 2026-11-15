@@ -68,6 +68,17 @@ enum Command {
     },
     /// Show where Alouette keeps its files.
     Paths,
+    /// Connect to a server and show how: address family, proxy, TLS version, key exchange.
+    Probe {
+        /// host:port, such as example.org:443 or [2001:db8::1]:1965
+        target: String,
+        /// Plain TCP only, no TLS.
+        #[arg(long)]
+        plain: bool,
+        /// Accept any certificate and print its fingerprint (as Gemini does).
+        #[arg(long)]
+        tofu: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -102,12 +113,26 @@ fn modules() -> Vec<Box<dyn Module>> {
     vec![Box::new(CoreModule), Box::new(mod_demo::DemoModule)]
 }
 
-fn main() -> Result<()> {
+fn main() -> std::process::ExitCode {
+    match real_main() {
+        Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("alouette: {e:#}");
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
+fn real_main() -> Result<()> {
     let cli = Cli::parse();
     let paths = Paths::discover();
     let config_path = cli.config.clone().unwrap_or_else(|| paths.config_file());
 
     if let Some(cmd) = &cli.command {
+        if let Command::Probe { target, plain, tofu } = cmd {
+            let cfg = Config::load(&config_path).unwrap_or_default();
+            return probe(&cfg, target, *plain, *tofu);
+        }
         return subcommand(cmd, &paths, &config_path);
     }
 
@@ -180,7 +205,7 @@ fn main() -> Result<()> {
         let _watcher = ConfigWatcher::start(config_path.clone(), app.sender())
             .map_err(|e| tracing::warn!("config watching is off: {e}"))
             .ok();
-        let mut term = setup_terminal()?;
+        let mut term = setup_terminal(app.config.general.mouse)?;
         let result = alouette_ui::run::run(&mut term, &mut app, events).await;
         restore_terminal();
         result
@@ -229,6 +254,7 @@ fn subcommand(cmd: &Command, paths: &Paths, config_path: &std::path::Path) -> Re
                 )?;
             }
         }
+        Command::Probe { .. } => unreachable!("handled before"),
         Command::Paths => {
             println!("config   {}", config_path.display());
             println!("themes   {}", paths.themes_dir().display());
@@ -238,6 +264,48 @@ fn subcommand(cmd: &Command, paths: &Paths, config_path: &std::path::Path) -> Re
         }
     }
     Ok(())
+}
+
+fn probe(cfg: &Config, target: &str, plain: bool, tofu: bool) -> Result<()> {
+    let (host, port) = match target.rsplit_once(':') {
+        Some((h, p)) if !h.is_empty() && p.parse::<u16>().is_ok() && (!h.contains(':') || h.ends_with(']')) => {
+            (h.trim_start_matches('[').trim_end_matches(']').to_string(), p.parse::<u16>()?)
+        }
+        _ => (target.trim_start_matches('[').trim_end_matches(']').to_string(), 443),
+    };
+    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
+    rt.block_on(async {
+        let net = alouette_net::Net::new(&cfg.network)?;
+        println!("dns      {}", net.dns().label());
+        if let Ok(addrs) = net.resolve(&host, port).await {
+            for a in addrs {
+                println!("address  {}", a.ip());
+            }
+        }
+        let info = if plain {
+            net.tcp(&host, port).await?.info
+        } else {
+            let verify = if tofu { alouette_net::Verify::Tofu } else { alouette_net::Verify::System };
+            let opts = alouette_net::TlsOptions { verify, ..Default::default() };
+            net.tls(&host, port, &opts).await?.info
+        };
+        println!("via      {}", info.via);
+        if let Some(p) = info.peer {
+            println!("peer     {p}");
+        }
+        if let Some(t) = &info.tls {
+            println!("tls      {} · {} · {}", t.version, t.cipher, t.key_exchange);
+            println!("pq       {}", if t.post_quantum { "yes (hybrid ML-KEM)" } else { "no" });
+            if let Some(a) = &t.alpn {
+                println!("alpn     {a}");
+            }
+            if let Some(f) = &t.cert_sha256 {
+                println!("cert     sha256:{f}{}", if t.verified { " (verified)" } else { " (not verified)" });
+            }
+        }
+        println!("badge    {}", info.badge());
+        Ok(())
+    })
 }
 
 fn init_logging(paths: &Paths) -> Option<tracing_appender::non_blocking::WorkerGuard> {
@@ -251,7 +319,7 @@ fn init_logging(paths: &Paths) -> Option<tracing_appender::non_blocking::WorkerG
 
 type Term = ratatui::Terminal<ratatui::backend::CrosstermBackend<std::io::Stdout>>;
 
-fn setup_terminal() -> Result<Term> {
+fn setup_terminal(mouse: bool) -> Result<Term> {
     // Put the terminal back even if we panic, so the shell is usable afterwards.
     let hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
@@ -260,7 +328,10 @@ fn setup_terminal() -> Result<Term> {
     }));
     terminal::enable_raw_mode()?;
     let mut out = std::io::stdout();
-    execute!(out, terminal::EnterAlternateScreen, EnableMouseCapture, EnableBracketedPaste)?;
+    execute!(out, terminal::EnterAlternateScreen, EnableBracketedPaste)?;
+    if mouse {
+        execute!(out, EnableMouseCapture)?;
+    }
     if terminal::supports_keyboard_enhancement().unwrap_or(false) {
         let _ = execute!(out, PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES));
     }

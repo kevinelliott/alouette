@@ -12,6 +12,7 @@ authors.workspace = true
 alouette-core.workspace = true
 alouette-store.workspace = true
 alouette-nostalgia.workspace = true
+alouette-net.workspace = true
 anyhow.workspace = true
 crossterm.workspace = true
 futures.workspace = true

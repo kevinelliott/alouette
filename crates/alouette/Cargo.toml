@@ -21,6 +21,7 @@ alouette-core.workspace = true
 alouette-store.workspace = true
 alouette-ui.workspace = true
 alouette-nostalgia.workspace = true
+alouette-net.workspace = true
 mod-demo.workspace = true
 anyhow.workspace = true
 clap.workspace = true
