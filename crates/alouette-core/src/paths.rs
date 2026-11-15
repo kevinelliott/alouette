@@ -50,6 +50,17 @@ impl Paths {
         self.config_dir.join("themes")
     }
 
+    /// Where downloads go: the user's Downloads folder, or `data/downloads` under
+    /// `ALOUETTE_HOME`.
+    pub fn downloads_dir(&self) -> PathBuf {
+        if std::env::var_os("ALOUETTE_HOME").is_none()
+            && let Some(d) = directories::UserDirs::new().and_then(|u| u.download_dir().map(Path::to_path_buf))
+        {
+            return d;
+        }
+        self.data_dir.join("downloads")
+    }
+
     pub fn state_db(&self) -> PathBuf {
         self.data_dir.join("state.sqlite3")
     }

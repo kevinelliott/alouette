@@ -158,6 +158,11 @@ impl App {
         self.events.clone()
     }
 
+    /// The state database, when it opened.
+    pub fn store(&self) -> Option<&Store> {
+        self.store.as_ref()
+    }
+
     pub fn secrets_backend(&self) -> &'static str {
         self.secrets.backend()
     }

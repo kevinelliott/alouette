@@ -12,11 +12,11 @@ expression: "render_to_string(&mut app(LayoutKind::Tiled, KeymapPreset::Cua), 10
 │                                                    █││ demo:jobs                          Start s│
 │ Your whole internet desk, in one terminal.         █││ gopher://gopher.floodgap.com/      Floodga│
 │                                                    █││ gemini://geminiprotocol.net/       Project│
-│ Alouette brings mail, news, Gopher and Gemini, file█││ finger://example.org/              Finger │
+│ Alouette brings mail, news, Gopher and Gemini, file█││ finger://graph.no/oslo             The Osl│
 │ transfer, terminals, the web and more into one     █││                                           │
-│ terminal app, in the spirit of Minuet (1994). This █││                                           │
-│ is milestone M0, the foundation: the desktop,      █││                                           │
-│ layouts, palette, themes and background tasks.     █│└───────────────────────────────────────────┘
+│ terminal app, in the spirit of Minuet (1994).      █││                                           │
+│ Burrow (Gopher, Gemini and Finger) is here now; the█││                                           │
+│ other modules follow milestone by milestone.       █│└───────────────────────────────────────────┘
 │                                                    █│╔════════ Demo: background jobs ═════════ 3 ╗
 │ Getting around                                     ║│║Start a job. It runs in the background whil║
 │   ^K            Command palette: every command,    ║│║                                           ║

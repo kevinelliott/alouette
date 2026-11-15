@@ -109,8 +109,12 @@ fn parse_size(s: &str) -> Result<(u16, u16), String> {
     Ok((w, h))
 }
 
-fn modules() -> Vec<Box<dyn Module>> {
-    vec![Box::new(CoreModule), Box::new(mod_demo::DemoModule)]
+fn modules(paths: &Paths) -> Vec<Box<dyn Module>> {
+    vec![
+        Box::new(CoreModule),
+        Box::new(mod_burrow::BurrowModule::new(paths.downloads_dir())),
+        Box::new(mod_demo::DemoModule),
+    ]
 }
 
 fn main() -> std::process::ExitCode {
@@ -172,7 +176,7 @@ fn real_main() -> Result<()> {
             themes: ThemeSet::load(&paths.themes_dir()),
             store: if dumping { Store::in_memory().ok() } else { store },
             secrets: alouette_store::secrets::default_store(),
-            modules: modules(),
+            modules: modules(&paths),
             color_mode: if dumping { ColorMode::TrueColor } else { ColorMode::detect() },
             show_splash: !cli.no_splash && !dumping,
             local_offset,

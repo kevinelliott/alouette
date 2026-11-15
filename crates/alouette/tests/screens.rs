@@ -90,9 +90,9 @@ fn opening_the_same_url_focuses_instead_of_duplicating() {
 #[test]
 fn unknown_scheme_says_when_it_arrives() {
     let mut a = app(LayoutKind::Tabs, KeymapPreset::Cua);
-    a.open_url("gopher://gopher.floodgap.com/");
+    a.open_url("https://example.org/");
     let screen = render_to_string(&mut a, 100, 30);
-    assert!(screen.contains("M1"), "{screen}");
+    assert!(screen.contains("M5"), "{screen}");
 }
 
 #[test]

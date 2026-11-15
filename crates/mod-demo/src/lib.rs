@@ -207,9 +207,9 @@ const LINKS: &[(&str, &str)] = &[
     ("about:tasks", "Background tasks"),
     ("about:minuet", "A short history of Minuet"),
     ("demo:jobs", "Start some background jobs"),
-    ("gopher://gopher.floodgap.com/", "Floodgap Gopher (Burrow, coming in M1)"),
-    ("gemini://geminiprotocol.net/", "Project Gemini (Burrow, coming in M1)"),
-    ("finger://example.org/", "Finger (coming in M1)"),
+    ("gopher://gopher.floodgap.com/", "Floodgap Gopher, in Burrow"),
+    ("gemini://geminiprotocol.net/", "Project Gemini, in Burrow"),
+    ("finger://graph.no/oslo", "The Oslo forecast over Finger"),
 ];
 
 #[derive(Default)]

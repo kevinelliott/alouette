@@ -30,10 +30,14 @@ dependencies = [
  "clap",
  "crossterm",
  "insta",
+ "mod-burrow",
  "mod-demo",
  "ratatui",
+ "rcgen",
+ "rustls",
  "time",
  "tokio",
+ "tokio-rustls",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
@@ -1681,6 +1685,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "mod-burrow"
+version = "0.1.0"
+dependencies = [
+ "alouette-core",
+ "alouette-net",
+ "alouette-store",
+ "alouette-ui",
+ "crossterm",
+ "proto-finger",
+ "proto-gemini",
+ "proto-gopher",
+ "ratatui",
+ "tokio",
+ "tracing",
+ "unicode-width",
+ "url",
+]
+
+[[package]]
 name = "mod-demo"
 version = "0.1.0"
 dependencies = [
@@ -2153,6 +2176,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "proto-finger"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.21",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "proto-gemini"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.21",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "proto-gopher"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.21",
+ "tokio",
+ "url",
 ]
 
 [[package]]
