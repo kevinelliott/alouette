@@ -117,6 +117,13 @@ refresh_mins = 60             # fetch feeds this often while the Feeds window is
 # url = "https://blog.rust-lang.org/feed.xml"
 # folder = "Rust"
 
+[social]
+poll_secs = 60                # check for new posts this often while the Social window is open
+fold_content_warnings = true  # keep posts with a content warning folded until opened
+# [[social.accounts]]         # added for you when you sign in from social:
+# name = "home"
+# instance = "mastodon.social"
+
 [keys]
 # Override any key binding. Examples:
 # palette = "ctrl+p"

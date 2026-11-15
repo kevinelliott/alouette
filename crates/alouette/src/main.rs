@@ -120,6 +120,7 @@ fn modules(paths: &Paths) -> Vec<Box<dyn Module>> {
         Box::new(mod_mail::MailModule::new(paths.cache_dir.clone())),
         Box::new(mod_news::NewsModule),
         Box::new(mod_news::FeedsModule),
+        Box::new(mod_social::SocialModule),
         Box::new(mod_demo::DemoModule),
     ]
 }

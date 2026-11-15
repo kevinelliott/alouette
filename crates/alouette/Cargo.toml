@@ -29,6 +29,7 @@ mod-terminal.workspace = true
 mod-files.workspace = true
 mod-mail.workspace = true
 mod-news.workspace = true
+mod-social.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 crossterm.workspace = true

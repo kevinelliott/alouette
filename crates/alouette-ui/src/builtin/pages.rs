@@ -45,7 +45,7 @@ impl TextPage {
             Row::Text(
                 "Alouette brings mail, news, Gopher and Gemini, file transfer, terminals, the web \
                  and more into one terminal app, in the spirit of Minuet (1994). Burrow (Gopher, Gemini \
-                 and Finger), Inquire, NetTools, Terminal, Files, Mail, News and Feeds are here now; the other modules \
+                 and Finger), Inquire, NetTools, Terminal, Files, Mail, News, Feeds and Social are here now; the other modules \
                  follow milestone by milestone."
                     .into(),
             ),

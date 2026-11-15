@@ -426,6 +426,33 @@ pub struct FeedSub {
     pub folder: Option<String>,
 }
 
+/// The Social module: the fediverse.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Social {
+    /// Check for new posts this often while the window is open, in seconds.
+    pub poll_secs: u64,
+    /// Show content warnings folded until you open them.
+    pub fold_content_warnings: bool,
+    pub accounts: Vec<SocialAccount>,
+}
+
+impl Default for Social {
+    fn default() -> Self {
+        Self { poll_secs: 60, fold_content_warnings: true, accounts: vec![] }
+    }
+}
+
+/// A fediverse account. The access token lives in the secret store.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct SocialAccount {
+    /// What to call it, such as "home".
+    pub name: String,
+    /// The server, such as `mastodon.social`.
+    pub instance: String,
+}
+
 /// How an account connects.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
@@ -482,6 +509,7 @@ pub struct Config {
     pub mail: Mail,
     pub news: News,
     pub feeds: Feeds,
+    pub social: Social,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,

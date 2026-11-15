@@ -80,6 +80,7 @@ dependencies = [
  "mod-mail",
  "mod-nettools",
  "mod-news",
+ "mod-social",
  "mod-terminal",
  "ratatui",
  "rcgen",
@@ -2603,6 +2604,25 @@ dependencies = [
  "crossterm",
  "mail-builder",
  "proto-nntp",
+ "ratatui",
+ "serde",
+ "serde_json",
+ "time",
+ "tokio",
+ "unicode-width",
+ "url",
+]
+
+[[package]]
+name = "mod-social"
+version = "0.1.0"
+dependencies = [
+ "alouette-core",
+ "alouette-mail",
+ "alouette-net",
+ "alouette-store",
+ "alouette-ui",
+ "crossterm",
  "ratatui",
  "serde",
  "serde_json",

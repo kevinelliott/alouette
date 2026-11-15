@@ -16,9 +16,9 @@ expression: "render_to_string(&mut app(LayoutKind::Tiled, KeymapPreset::Cua), 10
 │ transfer, terminals, the web and more into one     █││                                           │
 │ terminal app, in the spirit of Minuet (1994).      █││                                           │
 │ Burrow (Gopher, Gemini and Finger), Inquire,       █││                                           │
-│ NetTools, Terminal, Files, Mail, News and Feeds are║│└───────────────────────────────────────────┘
-│ here now; the other modules follow milestone by    ║│╔════════ Demo: background jobs ═════════ 3 ╗
-│ milestone.                                         ║│║Start a job. It runs in the background whil║
+│ NetTools, Terminal, Files, Mail, News, Feeds and   ║│└───────────────────────────────────────────┘
+│ Social are here now; the other modules follow      ║│╔════════ Demo: background jobs ═════════ 3 ╗
+│ milestone by milestone.                            ║│║Start a job. It runs in the background whil║
 │                                                    ║│║                                           ║
 │ Getting around                                     ║│║  d  Download    a 6 second fake download w║
 │   ^K            Command palette: every command,    ║│║  f  Failing job fails half way, so you can║

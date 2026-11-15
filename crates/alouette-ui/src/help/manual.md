@@ -62,6 +62,12 @@ Enter opens a group and then an article. Space pages through an article and then
 
 feeds: shows the feeds you follow on the left and their items on the right. Press a and type a feed's address, or just a site's: Alouette finds the feed the page points to. Enter reads an item, Space goes through the unread ones, o opens the item's link, m marks a feed read, D stops following it and g refreshes. Feeds refresh by themselves every feeds.refresh_mins minutes. feed:URL shows one feed without following it; press s to follow it.
 
+## Social
+
+social: opens your first account under [[social.accounts]]. social:@you@mastodon.social adds an account: paste an access token from your server's Preferences > Development page, or leave it empty to approve Alouette in your browser and paste back the code it shows. The token is kept in your keychain. Mastodon and servers that speak its API, such as GoToSocial, Pleroma and Akkoma, all work.
+
+1 to 4 (or Tab) switch between Home, Notifications, Local and Federated. Enter opens a post's thread beside the list, or unfolds a content warning. c writes a post, r replies, f favourites, b boosts, o opens the post in your browser and g refreshes. Timelines refresh by themselves every social.poll_secs seconds, and scrolling to the end loads older posts. While writing, Ctrl+V changes who can see the post, the top line takes a content warning, and Ctrl+S posts.
+
 ## Configuration
 
 Settings live in alouette.toml. Run "alouette config path" to find it. Alouette reloads the file as soon as you save it. The Settings window changes common options for you and saves the file.
