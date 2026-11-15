@@ -5,6 +5,7 @@
 
 pub mod dns;
 pub mod happy;
+pub mod http;
 pub mod proxy;
 pub mod route;
 pub mod tls;

@@ -102,6 +102,8 @@ pub struct TlsInfo {
     pub cert_sha256: Option<String>,
     /// True when the certificate was checked against the system trust store.
     pub verified: bool,
+    /// The certificates the server sent, leaf first, as DER.
+    pub chain: Vec<Vec<u8>>,
 }
 
 impl TlsInfo {
@@ -117,7 +119,18 @@ impl TlsInfo {
         let post_quantum = key_exchange.contains("MLKEM");
         let alpn = conn.alpn_protocol().map(|a| String::from_utf8_lossy(a).into_owned());
         let cert_sha256 = conn.peer_certificates().and_then(|c| c.first()).map(|c| fingerprint(c.as_ref()));
-        Self { version, cipher, key_exchange, post_quantum, alpn, cert_sha256, verified: verify == Verify::System }
+        let chain =
+            conn.peer_certificates().map(|c| c.iter().map(|d| d.as_ref().to_vec()).collect()).unwrap_or_default();
+        Self {
+            version,
+            cipher,
+            key_exchange,
+            post_quantum,
+            alpn,
+            cert_sha256,
+            verified: verify == Verify::System,
+            chain,
+        }
     }
 }
 

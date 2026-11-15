@@ -7,9 +7,11 @@ news and feeds, Gopher and Gemini, search and lookups, file transfer, SSH and Te
 network tools, contacts, a calendar, chat, the fediverse and an optional AI assistant, all in one
 window manager.
 
-> **Status: milestone M0 (foundation).** The shell works: windows, layouts, menus, the command
-> palette, themes, key bindings, background tasks, config hot reload, history and secrets, plus
-> the shared network layer every module will connect through.
+> **Status: milestone M1 (small internet and NetTools).** The shell, the network layer and three
+> modules work today: **Burrow** (Gopher, Gemini, Finger), **Inquire** (one box that asks DNS,
+> RDAP, WHOIS, BGP, certificate logs, WebFinger, OpenPGP WKD, DICT, Veronica-2 and Gemini search at
+> once) and **NetTools** (ping, traceroute, DNS, ports, TLS inspection, mDNS). Mail, news, SSH and
+> the rest arrive milestone by milestone.
 > The internet modules arrive from M1 on. See the plan below.
 
 ## Try it
@@ -22,6 +24,14 @@ cargo run --release -- --dump-screen 100x30      # render one frame as text, no 
 
 Open **Modules > Demo > Background jobs** (or type `demo:jobs` after pressing F3) to start fake
 downloads and watch them in the Tasks window, where you can cancel and retry them.
+
+## Modules so far
+
+| Module | Try | Does |
+| --- | --- | --- |
+| Burrow | `gopher://gopher.floodgap.com/`, `gemini://geminiprotocol.net/`, `finger://graph.no/oslo` | Gopher (and `gophers://`), Gemini and Finger in one browser. Searches, Gemini input, redirects, back and forward, bookmarks, downloads through Tasks, and trust-on-first-use certificate pins that warn when a certificate changes. |
+| Inquire | `inquire:umn.edu`, `inquire:AS13335`, `inquire:@user@host`, `inquire:minuet` | Works out what you typed and asks every source that applies at once. Results stream in as they arrive. Anything typed into the command palette can be sent to Inquire. |
+| NetTools | `net:ping/example.org`, `net:dns/MX/umn.edu`, `net:tls/example.org` | A small command line: `ping`, `trace`, `dns`, `whois`, `rdap`, `asn`, `ports`, `tls` and `mdns`. |
 
 ## Three layouts, one set of windows
 
@@ -119,6 +129,9 @@ Rust 1.88 or newer. `cargo test --workspace` runs every test, including screen s
 | `alouette-net` | Happy Eyeballs, TLS 1.3 with post-quantum key exchange, DoH/DoT/DoQ, SOCKS5 and HTTP proxies, routing rules |
 | `alouette-ui` | Window manager, layouts, menus, palette, themes, keymaps, built-in pages |
 | `alouette-nostalgia` | Splash art, tips and Minuet history |
+| `alouette-lookup` | Lookups shared by Inquire and NetTools |
+| `proto-gopher`, `proto-gemini`, `proto-finger`, `proto-whois`, `proto-dict` | Protocol clients that work over any async stream |
+| `mod-burrow`, `mod-inquire`, `mod-nettools` | The modules |
 | `mod-demo` | A small example module |
 
 ## License

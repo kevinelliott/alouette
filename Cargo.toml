@@ -24,6 +24,15 @@ mod-burrow = { path = "crates/mod-burrow", version = "0.1.0" }
 proto-gopher = { path = "crates/proto-gopher", version = "0.1.0" }
 proto-gemini = { path = "crates/proto-gemini", version = "0.1.0" }
 proto-finger = { path = "crates/proto-finger", version = "0.1.0" }
+proto-whois = { path = "crates/proto-whois", version = "0.1.0" }
+proto-dict = { path = "crates/proto-dict", version = "0.1.0" }
+alouette-lookup = { path = "crates/alouette-lookup", version = "0.1.0" }
+mod-nettools = { path = "crates/mod-nettools", version = "0.1.0" }
+mod-inquire = { path = "crates/mod-inquire", version = "0.1.0" }
+serde_json = "1"
+x509-parser = "0.18"
+surge-ping = "0.9"
+mdns-sd = "0.21"
 
 anyhow = "1"
 clap = { version = "4.6", features = ["derive", "env"] }

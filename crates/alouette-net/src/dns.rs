@@ -76,6 +76,78 @@ impl Dns {
     }
 }
 
+/// One answer from a record lookup.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Answer {
+    pub name: String,
+    pub rtype: String,
+    pub ttl: u32,
+    pub data: String,
+}
+
+/// Record types the lookup tools offer.
+pub const RECORD_TYPES: &[&str] = &[
+    "A", "AAAA", "CNAME", "MX", "NS", "TXT", "SOA", "CAA", "SRV", "HTTPS", "SVCB", "PTR", "DS", "DNSKEY", "TLSA",
+    "SSHFP",
+];
+
+impl Dns {
+    fn resolver(&self) -> Result<Arc<TokioResolver>, NetError> {
+        match self {
+            Dns::Encrypted { resolver, .. } => Ok(resolver.clone()),
+            Dns::System => TokioResolver::builder_tokio()
+                .and_then(|b| b.build())
+                .map(Arc::new)
+                .map_err(|e| NetError::Config(format!("reading the system DNS settings: {e}"))),
+        }
+    }
+
+    /// Look up records of one type, such as `MX` or `TXT`. For `PTR`, an IP address is
+    /// turned into its reverse name.
+    pub async fn lookup(&self, name: &str, rtype: &str) -> Result<Vec<Answer>, NetError> {
+        use hickory_resolver::proto::rr::RecordType;
+        let rt: RecordType =
+            rtype.to_ascii_uppercase().parse().map_err(|_| NetError::Config(format!("unknown record type {rtype}")))?;
+        let resolver = self.resolver()?;
+        let query = match (rt, name.parse::<IpAddr>()) {
+            (RecordType::PTR, Ok(ip)) => reverse_name(ip),
+            _ => name.trim_end_matches('.').to_string() + ".",
+        };
+        let res = resolver.lookup(query.as_str(), rt).await;
+        match res {
+            Ok(l) => Ok(l
+                .answers()
+                .iter()
+                .map(|r| Answer {
+                    name: r.name.to_string(),
+                    rtype: r.record_type().to_string(),
+                    ttl: r.ttl,
+                    data: r.data.to_string(),
+                })
+                .collect()),
+            Err(e) if e.to_string().contains("no record") || e.to_string().contains("NXDomain") => Ok(vec![]),
+            Err(e) => Err(NetError::Dns(name.to_string(), e.to_string())),
+        }
+    }
+}
+
+/// `1.2.3.4` becomes `4.3.2.1.in-addr.arpa.`, and IPv6 nibbles go under `ip6.arpa.`.
+pub fn reverse_name(ip: IpAddr) -> String {
+    match ip {
+        IpAddr::V4(v4) => {
+            let o = v4.octets();
+            format!("{}.{}.{}.{}.in-addr.arpa.", o[3], o[2], o[1], o[0])
+        }
+        IpAddr::V6(v6) => {
+            let mut s = String::new();
+            for b in v6.octets().iter().rev() {
+                s.push_str(&format!("{:x}.{:x}.", b & 0xf, b >> 4));
+            }
+            s + "ip6.arpa."
+        }
+    }
+}
+
 fn name_servers(kind: &str, server: &str) -> Result<Vec<NameServerConfig>, NetError> {
     let group: Option<&ServerGroup<'static>> = match server.to_ascii_lowercase().as_str() {
         "cloudflare" => Some(&CLOUDFLARE),
@@ -112,6 +184,13 @@ mod tests {
         let d = Dns::System;
         assert_eq!(d.resolve("127.0.0.1", 70).await.unwrap(), vec!["127.0.0.1:70".parse().unwrap()]);
         assert_eq!(d.resolve("[::1]", 1965).await.unwrap(), vec!["[::1]:1965".parse().unwrap()]);
+    }
+
+    #[test]
+    fn reverse_names() {
+        assert_eq!(reverse_name("192.0.2.1".parse().unwrap()), "1.2.0.192.in-addr.arpa.");
+        assert!(reverse_name("2001:db8::1".parse().unwrap()).starts_with("1.0.0.0."));
+        assert!(reverse_name("2001:db8::1".parse().unwrap()).ends_with(".8.b.d.0.1.0.0.2.ip6.arpa."));
     }
 
     #[test]

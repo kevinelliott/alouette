@@ -1,0 +1,17 @@
+[package]
+name = "proto-dict"
+description = "Async dict protocol client for Alouette, usable on its own"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+keywords = ["dict", "client", "async"]
+
+[dependencies]
+thiserror.workspace = true
+tokio = { workspace = true, features = ["io-util"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

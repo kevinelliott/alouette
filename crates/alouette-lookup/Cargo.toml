@@ -1,0 +1,28 @@
+[package]
+name = "alouette-lookup"
+description = "Lookups shared by Alouette's Inquire and NetTools: DNS, WHOIS, RDAP, ASN, certificate transparency, WebFinger, OpenPGP WKD, DICT, Finger, TLS inspection and small-web search"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-net.workspace = true
+futures.workspace = true
+proto-dict.workspace = true
+proto-finger.workspace = true
+proto-gemini.workspace = true
+proto-gopher.workspace = true
+proto-whois.workspace = true
+serde_json.workspace = true
+sha1 = "0.10"
+time.workspace = true
+tokio = { workspace = true, features = ["time"] }
+url.workspace = true
+x509-parser.workspace = true
+
+[dev-dependencies]
+alouette-core.workspace = true
+tokio = { workspace = true, features = ["test-util", "net", "io-util"] }

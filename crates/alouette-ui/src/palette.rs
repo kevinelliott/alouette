@@ -51,6 +51,8 @@ pub struct Palette {
     shown: Vec<usize>,
     /// A URL item built from the query, shown first.
     url_item: Option<PaletteItem>,
+    /// "Inquire about this", shown last whenever something is typed.
+    inquire_item: Option<PaletteItem>,
     state: ListState,
     matcher: Matcher,
 }
@@ -70,6 +72,7 @@ impl Palette {
             items,
             shown: vec![],
             url_item: None,
+            inquire_item: None,
             state: ListState::default(),
             matcher: Matcher::new(nucleo_matcher::Config::DEFAULT),
         };
@@ -82,6 +85,23 @@ impl Palette {
         self.url_item = alouette_core::router::normalize(q)
             .filter(|_| q.contains(':') || q.contains('.') || q.contains('@'))
             .map(|u| PaletteItem::new("Open", u.to_string(), "Open this URL", PaletteCmd::Open(u.to_string())));
+        self.inquire_item = (q.chars().count() >= 2).then(|| {
+            let enc: String = q
+                .bytes()
+                .map(|b| match b {
+                    b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' | b'@' | b':' => {
+                        (b as char).to_string()
+                    }
+                    _ => format!("%{b:02X}"),
+                })
+                .collect();
+            PaletteItem::new(
+                "Inquire",
+                q.to_string(),
+                "Look it up everywhere",
+                PaletteCmd::Open(format!("inquire:?q={enc}")),
+            )
+        });
         if q.is_empty() {
             self.shown = (0..self.items.len()).collect();
         } else {
@@ -104,14 +124,20 @@ impl Palette {
     }
 
     fn len(&self) -> usize {
-        self.shown.len() + usize::from(self.url_item.is_some())
+        self.shown.len() + usize::from(self.url_item.is_some()) + usize::from(self.inquire_item.is_some())
     }
 
     fn item_at(&self, i: usize) -> Option<&PaletteItem> {
-        match &self.url_item {
-            Some(u) if i == 0 => Some(u),
-            Some(_) => self.shown.get(i - 1).map(|j| &self.items[*j]),
-            None => self.shown.get(i).map(|j| &self.items[*j]),
+        let head = usize::from(self.url_item.is_some());
+        if i == 0
+            && let Some(u) = &self.url_item
+        {
+            return Some(u);
+        }
+        match self.shown.get(i - head) {
+            Some(j) => Some(&self.items[*j]),
+            None if i - head == self.shown.len() => self.inquire_item.as_ref(),
+            None => None,
         }
     }
 
@@ -287,7 +313,10 @@ mod tests {
     #[test]
     fn prefilled_query_and_urls() {
         let p = Palette::new(items(), "theme ");
-        assert!(p.visible_labels().iter().all(|l| l == "amber" || l == "modern-dark"));
+        let labels = p.visible_labels();
+        assert!(labels[..labels.len() - 1].iter().all(|l| l == "amber" || l == "modern-dark"));
+        // The last item offers to look the text up in Inquire.
+        assert_eq!(labels.last().unwrap(), "theme");
         let p = Palette::new(items(), "gemini://geminiprotocol.net/");
         assert_eq!(p.visible_labels()[0], "gemini://geminiprotocol.net/");
     }

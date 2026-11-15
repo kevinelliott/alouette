@@ -11,7 +11,7 @@ expression: "render_to_string(&mut a, 100, 30)"
 ░░│ │ ║       │Module   Alouette: Tasks  about:tasks                                 │░░░░░░░░░░░░░░
 ░░│ │ ║  d  Do│Module   Alouette: History  about:history                             │░░░░░░░░░░░░░░
 ░░│ │ ║  f  Fa│History  about:welcome  Welcome                                       │░░░░░░░░░░░░░░
-░░│ │ ║  l  Lo│                                                                      │░░░░░░░░░░░░░░
+░░│ │ ║  l  Lo│Inquire  about  Look it up everywhere                                 │░░░░░░░░░░░░░░
 ░░│ │ ║  b  Bu│                                                                      │░░░░░░░░░░░░░░
 ░░│ │ ║       │                                                                      │░░░░░░░░░░░░░░
 ░░│ │ ║  t  op│                                                                      │░░░░░░░░░░░░░░
