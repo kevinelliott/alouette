@@ -9,6 +9,7 @@ pub mod http;
 pub mod proxy;
 pub mod route;
 pub mod tls;
+pub mod web;
 
 use std::net::SocketAddr;
 use std::sync::Arc;

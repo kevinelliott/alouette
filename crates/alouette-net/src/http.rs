@@ -99,9 +99,13 @@ impl Net {
             Some(p) => format!("{}:{p}", url.host_str().unwrap_or("")),
             None => url.host_str().unwrap_or("").to_string(),
         };
-        let mut req = format!(
-            "{method} {target} HTTP/1.1\r\nHost: {host_header}\r\nUser-Agent: {USER_AGENT}\r\nAccept-Encoding: identity\r\nConnection: close\r\n"
-        );
+        let mut req = format!("{method} {target} HTTP/1.1\r\nHost: {host_header}\r\nConnection: close\r\n");
+        if !headers.iter().any(|(k, _)| k.eq_ignore_ascii_case("user-agent")) {
+            req.push_str(&format!("User-Agent: {USER_AGENT}\r\n"));
+        }
+        if !headers.iter().any(|(k, _)| k.eq_ignore_ascii_case("accept-encoding")) {
+            req.push_str("Accept-Encoding: identity\r\n");
+        }
         for (k, v) in headers {
             req.push_str(&format!("{k}: {v}\r\n"));
         }

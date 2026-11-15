@@ -68,6 +68,16 @@ social: opens your first account under [[social.accounts]]. social:@you@mastodon
 
 1 to 4 (or Tab) switch between Home, Notifications, Local and Federated. Enter opens a post's thread beside the list, or unfolds a content warning. c writes a post, r replies, f favourites, b boosts, o opens the post in your browser and g refreshes. Timelines refresh by themselves every social.poll_secs seconds, and scrolling to the end loads older posts. While writing, Ctrl+V changes who can see the post, the top line takes a content warning, and Ctrl+S posts.
 
+## Web
+
+web: opens the start page, with a search box, your bookmarks and recent pages. Any http:// or https:// address opens in Web, from the command line, the palette or a link in mail, news or feeds. Pages load over HTTP/2 when the server offers it, otherwise HTTP/1.1, and the status line shows which along with the connection.
+
+Press o to go to an address. Words that are not an address are searched with web.search (DuckDuckGo's HTML page unless you change it). f shows a letter by every link and field on screen: type the letters to follow it, or a capital to open it in a new window. Tab and Shift+Tab move between links and fields and Enter follows or edits; a page's only text box is sent when you press Enter in it. Checkboxes and radio buttons toggle with Enter, and lists open as a menu.
+
+b goes back and F forward (Alt+Left and Alt+Right work too), r reloads, / finds text and n finds the next match. R switches reader mode, which keeps only the article; Alouette remembers your choice for each site, and web.reader turns it on everywhere. a bookmarks the page, B lists bookmarks and H shows history. s saves the page as Markdown and d downloads the selected link, both into your downloads folder; files that are not pages download by themselves. O opens the page, or the selected link, in your own browser, which is the way to read pages that need JavaScript; Alouette says when a page looks like one of those. i shows how you are connected.
+
+Cookies last until you quit. Mail written in HTML is shown through the same renderer, with each link's address after its text.
+
 ## Configuration
 
 Settings live in alouette.toml. Run "alouette config path" to find it. Alouette reloads the file as soon as you save it. The Settings window changes common options for you and saves the file.

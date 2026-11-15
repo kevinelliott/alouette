@@ -10,6 +10,7 @@ authors.workspace = true
 
 [dependencies]
 alouette-core.workspace = true
+alouette-html.workspace = true
 alouette-net.workspace = true
 proto-imap.workspace = true
 proto-smtp.workspace = true

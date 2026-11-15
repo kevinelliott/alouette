@@ -201,8 +201,7 @@ impl Window for ComposeWindow {
             KeyCode::Char('v') if ctrl => self.visibility = (self.visibility + 1) % VISIBILITIES.len(),
             KeyCode::Esc => {
                 if self.editor.text().trim().is_empty()
-                    || self.reply_to.is_some()
-                        && self.editor.text().split_whitespace().all(|w| w.starts_with('@'))
+                    || self.reply_to.is_some() && self.editor.text().split_whitespace().all(|w| w.starts_with('@'))
                 {
                     cx.close();
                 } else {

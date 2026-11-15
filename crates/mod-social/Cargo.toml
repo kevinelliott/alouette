@@ -13,7 +13,7 @@ alouette-core.workspace = true
 alouette-ui.workspace = true
 alouette-net.workspace = true
 alouette-store.workspace = true
-alouette-mail.workspace = true
+alouette-html.workspace = true
 crossterm.workspace = true
 ratatui.workspace = true
 serde = { workspace = true }

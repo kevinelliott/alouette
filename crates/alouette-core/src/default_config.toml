@@ -117,6 +117,13 @@ refresh_mins = 60             # fetch feeds this often while the Feeds window is
 # url = "https://blog.rust-lang.org/feed.xml"
 # folder = "Rust"
 
+[web]
+home = ""                     # the page web: opens; empty shows the start page
+search = "https://html.duckduckgo.com/html/?q={}"  # where words typed as an address go
+reader = false                # open pages in reader mode (R switches, and is remembered per site)
+external_browser = ""         # command for "open in your browser"; empty uses the system's
+keep_cookies = false          # keep cookies between runs
+
 [social]
 poll_secs = 60                # check for new posts this often while the Social window is open
 fold_content_warnings = true  # keep posts with a content warning folded until opened

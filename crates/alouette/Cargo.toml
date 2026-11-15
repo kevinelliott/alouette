@@ -30,6 +30,7 @@ mod-files.workspace = true
 mod-mail.workspace = true
 mod-news.workspace = true
 mod-social.workspace = true
+mod-web.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 crossterm.workspace = true

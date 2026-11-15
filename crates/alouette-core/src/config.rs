@@ -426,6 +426,34 @@ pub struct FeedSub {
     pub folder: Option<String>,
 }
 
+/// The Web module.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Web {
+    /// The page `web:` opens. Empty shows the start page.
+    pub home: String,
+    /// Where words typed in the address bar go; `{}` is replaced by the words.
+    pub search: String,
+    /// Open pages in reader mode unless a site was switched back.
+    pub reader: bool,
+    /// The command that opens pages in your own browser. Empty uses the system's.
+    pub external_browser: String,
+    /// Keep cookies between runs.
+    pub keep_cookies: bool,
+}
+
+impl Default for Web {
+    fn default() -> Self {
+        Self {
+            home: String::new(),
+            search: "https://html.duckduckgo.com/html/?q={}".into(),
+            reader: false,
+            external_browser: String::new(),
+            keep_cookies: false,
+        }
+    }
+}
+
 /// The Social module: the fediverse.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -510,6 +538,7 @@ pub struct Config {
     pub news: News,
     pub feeds: Feeds,
     pub social: Social,
+    pub web: Web,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,

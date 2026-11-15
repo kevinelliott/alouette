@@ -121,6 +121,7 @@ fn modules(paths: &Paths) -> Vec<Box<dyn Module>> {
         Box::new(mod_news::NewsModule),
         Box::new(mod_news::FeedsModule),
         Box::new(mod_social::SocialModule),
+        Box::new(mod_web::WebModule::new(paths.downloads_dir())),
         Box::new(mod_demo::DemoModule),
     ]
 }

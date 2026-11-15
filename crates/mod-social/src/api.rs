@@ -65,7 +65,7 @@ impl Status {
             .map(|d| d.unix_timestamp())
     }
     pub fn text(&self) -> String {
-        alouette_mail::message::html_to_text(&self.content).trim().to_string()
+        alouette_html::to_text(&self.content, 10_000, alouette_html::LinkStyle::Hidden)
     }
 }
 
