@@ -33,7 +33,54 @@ pub fn provider() -> Arc<CryptoProvider> {
 }
 
 pub fn client_config(verify: Verify, tls13_only: bool, alpn: &[&[u8]]) -> Result<ClientConfig, NetError> {
-    client_config_ech(verify, tls13_only, alpn, None)
+    client_config_ech(verify, tls13_only, alpn, None, None)
+}
+
+/// A client certificate and its private key, both PEM, for servers that identify people
+/// by certificate (IRC's SASL EXTERNAL and CertFP, some Gemini capsules).
+#[derive(Clone)]
+pub struct ClientCert {
+    pub cert_pem: Vec<u8>,
+    pub key_pem: Vec<u8>,
+}
+
+impl std::fmt::Debug for ClientCert {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("ClientCert(..)")
+    }
+}
+
+impl ClientCert {
+    /// Read one PEM file holding both the certificate and the key, or two files.
+    pub fn load(cert: &std::path::Path, key: Option<&std::path::Path>) -> Result<Self, NetError> {
+        let read = |p: &std::path::Path| std::fs::read(p).map_err(|e| NetError::Tls(format!("{}: {e}", p.display())));
+        let cert_pem = read(cert)?;
+        let key_pem = match key {
+            Some(k) => read(k)?,
+            None => cert_pem.clone(),
+        };
+        Ok(Self { cert_pem, key_pem })
+    }
+
+    fn parts(&self) -> Result<(Vec<CertificateDer<'static>>, rustls::pki_types::PrivateKeyDer<'static>), NetError> {
+        use rustls::pki_types::PrivateKeyDer;
+        use rustls::pki_types::pem::PemObject;
+        let certs: Vec<CertificateDer<'static>> = CertificateDer::pem_slice_iter(&self.cert_pem)
+            .collect::<Result<_, _>>()
+            .map_err(|e| NetError::Tls(format!("client certificate: {e}")))?;
+        if certs.is_empty() {
+            return Err(NetError::Tls("the client certificate file holds no certificate".into()));
+        }
+        let key = PrivateKeyDer::from_pem_slice(&self.key_pem)
+            .map_err(|e| NetError::Tls(format!("client certificate key: {e}")))?;
+        Ok((certs, key))
+    }
+
+    /// The SHA-256 fingerprint of the certificate, as IRC services show for CertFP.
+    pub fn fingerprint(&self) -> Option<String> {
+        let (certs, _) = self.parts().ok()?;
+        Some(Sha256::digest(certs[0].as_ref()).iter().map(|b| format!("{b:02x}")).collect())
+    }
 }
 
 /// An ECH configuration from an ECHConfigList (as DNS HTTPS records carry), if one of its
@@ -53,6 +100,7 @@ pub fn client_config_ech(
     tls13_only: bool,
     alpn: &[&[u8]],
     ech: Option<&[u8]>,
+    client: Option<&ClientCert>,
 ) -> Result<ClientConfig, NetError> {
     let versions: &[&rustls::SupportedProtocolVersion] =
         if tls13_only { &[&rustls::version::TLS13] } else { &[&rustls::version::TLS13, &rustls::version::TLS12] };
@@ -62,14 +110,18 @@ pub fn client_config_ech(
         None => builder.with_protocol_versions(versions),
     }
     .map_err(|e| NetError::Tls(e.to_string()))?;
-    let mut cfg = match verify {
-        Verify::System => {
-            builder.with_platform_verifier().map_err(|e| NetError::Tls(e.to_string()))?.with_no_client_auth()
-        }
+    let builder = match verify {
+        Verify::System => builder.with_platform_verifier().map_err(|e| NetError::Tls(e.to_string()))?,
         Verify::Tofu => builder
             .dangerous()
-            .with_custom_certificate_verifier(Arc::new(AnyCert { algs: provider().signature_verification_algorithms }))
-            .with_no_client_auth(),
+            .with_custom_certificate_verifier(Arc::new(AnyCert { algs: provider().signature_verification_algorithms })),
+    };
+    let mut cfg = match client {
+        Some(c) => {
+            let (certs, key) = c.parts()?;
+            builder.with_client_auth_cert(certs, key).map_err(|e| NetError::Tls(e.to_string()))?
+        }
+        None => builder.with_no_client_auth(),
     };
     cfg.alpn_protocols = alpn.iter().map(|p| p.to_vec()).collect();
     Ok(cfg)
@@ -170,6 +222,23 @@ mod tests {
     #[test]
     fn bad_ech_lists_are_ignored() {
         assert!(super::ech_config(b"not an ECHConfigList").is_none());
-        assert!(super::client_config_ech(super::Verify::System, false, &[b"h2"], Some(b"junk")).is_ok());
+        assert!(super::client_config_ech(super::Verify::System, false, &[b"h2"], Some(b"junk"), None).is_ok());
+    }
+
+    #[test]
+    fn client_certificates() {
+        let key = rcgen::KeyPair::generate().unwrap();
+        let cert = rcgen::CertificateParams::new(vec!["me".into()]).unwrap().self_signed(&key).unwrap();
+        let c = super::ClientCert { cert_pem: cert.pem().into_bytes(), key_pem: key.serialize_pem().into_bytes() };
+        assert_eq!(c.fingerprint().unwrap().len(), 64);
+        assert!(super::client_config_ech(super::Verify::Tofu, false, &[], None, Some(&c)).is_ok());
+        // One file holding both works too.
+        let both = super::ClientCert {
+            cert_pem: [c.cert_pem.clone(), c.key_pem.clone()].concat(),
+            key_pem: [c.cert_pem.clone(), c.key_pem.clone()].concat(),
+        };
+        assert!(both.fingerprint().is_some());
+        let bad = super::ClientCert { cert_pem: b"nothing".to_vec(), key_pem: vec![] };
+        assert!(super::client_config_ech(super::Verify::Tofu, false, &[], None, Some(&bad)).is_err());
     }
 }

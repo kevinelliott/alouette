@@ -8,6 +8,9 @@ ignore = [
   # rsa (through russh, for RSA SSH keys): a timing side channel on private-key operations.
   # Alouette only signs SSH auth challenges locally; there is no fixed upstream release yet.
   { id = "RUSTSEC-2023-0071", reason = "no fix available; local signing only" },
+  # anymap2 (through matrix-sdk) is unmaintained, not vulnerable; matrix-sdk has no release
+  # without it yet.
+  { id = "RUSTSEC-2026-0319", reason = "unmaintained only; waiting on matrix-sdk" },
 ]
 
 [licenses]

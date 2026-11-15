@@ -60,7 +60,7 @@ impl Net {
         let mut addrs = self.resolve(host, port).await?;
         // Prefer the configured family, as Happy Eyeballs does for TCP.
         addrs.sort_by_key(|a| a.is_ipv6() != self.inner.prefer_v6);
-        let mut cfg = crate::tls::client_config_ech(verify, true, &[b"h3"], ech)?;
+        let mut cfg = crate::tls::client_config_ech(verify, true, &[b"h3"], ech, None)?;
         cfg.resumption = rustls::client::Resumption::store(self.inner.sessions.clone());
         let quic = quinn::crypto::rustls::QuicClientConfig::try_from(Arc::new(cfg))
             .map_err(|e| NetError::Tls(format!("QUIC: {e}")))?;

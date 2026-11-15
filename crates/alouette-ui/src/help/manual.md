@@ -22,7 +22,7 @@ Network work runs as tasks. The Tasks window lists them with progress. Select on
 
 ## URLs
 
-Alouette opens these URLs today: about: pages (welcome, tasks, history, settings, keys, help), gopher, gophers, gemini and finger (Burrow), inquire (Inquire), net (NetTools), term, ssh, telnet and mosh (Terminal), files, file, sftp, ftp, ftps, ftpes, dav, davs and s3 (Files), mail and mailto (Mail), news, nntp and nntps (News), feeds and feed (Feeds), social (Social), http, https and web (Web), contacts (Contacts), and calendar, webcal and webcals (Calendar).
+Alouette opens these URLs today: about: pages (welcome, tasks, history, settings, keys, help), gopher, gophers, gemini and finger (Burrow), inquire (Inquire), net (NetTools), term, ssh, telnet and mosh (Terminal), files, file, sftp, ftp, ftps, ftpes, dav, davs and s3 (Files), mail and mailto (Mail), news, nntp and nntps (News), feeds and feed (Feeds), social (Social), http, https and web (Web), contacts (Contacts), calendar, webcal and webcals (Calendar), and chat, irc, ircs and matrix (Chat).
 
 ## Terminal
 
@@ -99,6 +99,16 @@ a adds an event: a title, a day, a start and end time (leave the start empty for
 Calendars live in Alouette's data folder: the local one, CalDAV calendars saved under [[calendar.accounts]], and calendars you follow by address, which are read-only. Press s and paste an address (webcal:// or https://) to follow one, or open a webcal:// link. i imports a .ics file. CalDAV calendars and followed ones refresh every calendar.sync_mins minutes and when you press g.
 
 When a message in Mail holds an invitation, the reader shows what, when, where and who, and Y accepts, N declines and T says maybe. Accepted events go in your first CalDAV calendar (or the local one), and a reply to the organiser opens ready to send with Ctrl+S. Answers to your own invitations update the guest list by themselves, and a cancellation can be taken out of your calendar with Y.
+
+## Chat
+
+chat: opens one window for every IRC network and Matrix account: buffers on the left (each network's own buffer, then its channels, private chats and rooms), the conversation in the middle, the people in it on the right, and a line to type in at the bottom. Alt+Up and Alt+Down (or Ctrl+P and Ctrl+N) change buffer, Tab completes a nick, Up and Down bring back what you typed, and PgUp and PgDn scroll. A number beside a buffer counts new lines; it is highlighted when you are mentioned. Connections belong to Alouette, not the window, so closing the window keeps you connected.
+
+Add an IRC network with /server irc.libera.chat (no port means TLS on 6697; host:+7000 is TLS on another port, host:6667 is plain text), or open a link such as ircs://irc.libera.chat/#rust. Networks are saved under [[chat.irc]], where channels lists the channels to join and autoconnect = true connects when Alouette starts. sasl = "plain" signs in to services with the account (or your nick) and a password Alouette asks for once and keeps in your keychain; sasl = "external" uses the client certificate in cert, a PEM file, for CertFP. Alouette speaks IRCv3: server times, echoed messages, multiple prefixes, away and account notices, batches, and recent history on join where the server keeps it (chathistory, as soju and Ergo do). Type /help in Chat for the commands: /join, /part, /msg, /query, /me, /topic, /nick, /whois, /mode, /kick, /away and the rest; other /commands go to the server as typed, and // starts a line with a slash.
+
+Add a Matrix account with /matrix @you:matrix.org (and the homeserver's address after it when it differs from the server name). Alouette asks for your password once, signs in as a new session called Alouette, keeps that session in your keychain rather than the password, and keeps its encryption keys in an encrypted store in the data folder. Encrypted rooms are marked in the buffer list. To read encrypted history, verify this session: type /verify and accept in another of your sessions, then compare the emoji and type /confirm if they match (/mismatch if not). When another session asks to verify this one, /accept starts the same comparison. /recover followed by your recovery key unlocks your key backup instead. /devices lists your sessions and whether each is verified, /join #room:server joins a room, /part leaves it, and /logout ends the session on the server. matrix: links, such as matrix:r/alouette:matrix.org, join rooms too.
+
+Mentions of your nick (or of the words in chat.highlights) and private messages raise a notification; chat.notify = "all" notifies for every line and "off" for none. chat.logs = true keeps a plain-text log of every buffer, one file a day, under the data folder's chat/logs; it is off unless you turn it on.
 
 ## Configuration
 

@@ -1,0 +1,26 @@
+[package]
+name = "proto-irc"
+description = "IRC for Alouette: messages with IRCv3 tags, capability negotiation, SASL and a client state machine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+base64 = "0.22"
+time = { workspace = true, features = ["parsing", "formatting"] }
+tokio = { workspace = true, features = ["io-util", "sync", "time", "rt"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "net", "macros", "rt", "rt-multi-thread", "io-util"] }
+proto-irc = { path = ".", features = ["test-server"] }
+
+[features]
+# An in-memory IRC server for tests in this and other crates.
+test-server = ["tokio/net"]
+
+[[example]]
+name = "fake_irc"
+required-features = ["test-server"]

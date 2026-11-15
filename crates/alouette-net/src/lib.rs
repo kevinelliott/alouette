@@ -24,7 +24,7 @@ use tokio_rustls::client::TlsStream;
 
 pub use dns::Dns;
 pub use route::{Routes, Via};
-pub use tls::{TlsInfo, Verify};
+pub use tls::{ClientCert, TlsInfo, Verify};
 
 #[derive(Debug, thiserror::Error)]
 pub enum NetError {
@@ -116,11 +116,13 @@ pub struct TlsOptions {
     pub server_name: Option<String>,
     /// An ECHConfigList from the host's HTTPS record, to hide the name with ECH.
     pub ech: Option<Vec<u8>>,
+    /// A certificate to present to the server.
+    pub client_cert: Option<tls::ClientCert>,
 }
 
 impl Default for TlsOptions {
     fn default() -> Self {
-        Self { verify: Verify::System, alpn: vec![], server_name: None, ech: None }
+        Self { verify: Verify::System, alpn: vec![], server_name: None, ech: None, client_cert: None }
     }
 }
 
@@ -237,7 +239,13 @@ impl Net {
 
     /// Start TLS on an existing connection, as STARTTLS does.
     pub async fn handshake(&self, conn: Conn, opts: &TlsOptions) -> Result<TlsConn, NetError> {
-        let mut cfg = tls::client_config_ech(opts.verify, self.inner.tls13_only, &opts.alpn, opts.ech.as_deref())?;
+        let mut cfg = tls::client_config_ech(
+            opts.verify,
+            self.inner.tls13_only,
+            &opts.alpn,
+            opts.ech.as_deref(),
+            opts.client_cert.as_ref(),
+        )?;
         // Shared, so FTPS data connections can resume the control connection's session.
         cfg.resumption = rustls::client::Resumption::store(self.inner.sessions.clone());
         let name = opts.server_name.clone().unwrap_or_else(|| conn.info.host.clone());

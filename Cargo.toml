@@ -1,14 +1,14 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
-exclude = ["fuzz"]
+exclude = ["fuzz", "third_party"]
 default-members = ["crates/alouette"]
 
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.89"
+rust-version = "1.96"
 license = "MIT"
 repository = "https://github.com/kevinelliott/alouette"
 authors = ["Kevin Elliott and Alouette contributors"]
@@ -38,6 +38,9 @@ alouette-html = { path = "crates/alouette-html", version = "0.1.0" }
 alouette-pim = { path = "crates/alouette-pim", version = "0.1.0" }
 mod-contacts = { path = "crates/mod-contacts", version = "0.1.0" }
 mod-calendar = { path = "crates/mod-calendar", version = "0.1.0" }
+proto-irc = { path = "crates/proto-irc", version = "0.1.0" }
+alouette-matrix = { path = "crates/alouette-matrix", version = "0.1.0" }
+mod-chat = { path = "crates/mod-chat", version = "0.1.0" }
 
 proto-nntp = { path = "crates/proto-nntp", version = "0.1.0" }
 proto-smtp = { path = "crates/proto-smtp", version = "0.1.0" }
@@ -86,6 +89,8 @@ panic = "abort"
 [profile.dist]
 inherits = "release"
 lto = "fat"
+# Size over speed: a TUI spends its time waiting on the network and the person.
+opt-level = "s"
 
 # Smaller debug builds: line tables for our code, no debug info for dependencies.
 [profile.dev]
@@ -93,3 +98,8 @@ debug = "line-tables-only"
 
 [profile.dev.package."*"]
 debug = false
+
+# matrix-sdk-sqlite 0.19 pins rusqlite 0.40, whose bundled SQLite has RUSTSEC-2026-0459.
+# This copy differs only in asking for rusqlite 0.42; drop it when upstream catches up.
+[patch.crates-io]
+matrix-sdk-sqlite = { path = "third_party/matrix-sdk-sqlite" }

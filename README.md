@@ -7,15 +7,16 @@ news and feeds, Gopher and Gemini, search and lookups, file transfer, SSH and Te
 network tools, contacts, a calendar, chat, the fediverse and an optional AI assistant, all in one
 window manager.
 
-> **Status: milestone M6 (Contacts and Calendar).** The shell, the network layer and twelve modules
+> **Status: milestone M7 (Chat).** The shell, the network layer and thirteen modules
 > work today: **Burrow** (Gopher, Gemini, Finger), **Inquire** (one box that asks DNS, RDAP, WHOIS,
 > BGP, certificate logs, WebFinger, OpenPGP WKD, DICT, Veronica-2 and Gemini search at once),
 > **NetTools** (ping, traceroute, DNS, ports, TLS inspection, mDNS), **Terminal** (local shells,
 > SSH, Telnet, Mosh), **Files** (two panes over local disks, SFTP, FTP/FTPS, WebDAV and S3),
 > **Mail** (IMAP and SMTP, JMAP, Gmail and Microsoft 365), **News** (Usenet over NNTP),
 > **Feeds** (RSS, Atom and JSON Feed), **Social** (Mastodon and compatible servers), **Web**
-> (a text browser with reader mode), **Contacts** (CardDAV and LDAP) and **Calendar** (CalDAV,
-> ICS subscriptions and invitations). The rest arrive milestone by milestone; see the plan below.
+> (a text browser with reader mode), **Contacts** (CardDAV and LDAP), **Calendar** (CalDAV,
+> ICS subscriptions and invitations) and **Chat** (IRC and end-to-end encrypted Matrix). The rest
+> arrive milestone by milestone; see the plan below.
 
 ## Try it
 
@@ -43,6 +44,7 @@ downloads and watch them in the Tasks window, where you can cancel and retry the
 | Social | `social:`, `social:@you@mastodon.social` | Mastodon and servers that speak its API (GoToSocial, Pleroma, Akkoma). Home, notifications, local and federated timelines; threads, posting with content warnings and visibility, favourites and boosts. Signs in with a pasted token or through your browser. |
 | Contacts | `contacts:`, `contacts:Ada` | An address book kept as vCard files and synced with CardDAV (Nextcloud, iCloud, Fastmail, Radicale). Each card links to mail, the fediverse, SSH hosts and chat; LDAP directories can be searched and their people saved. Mail shows when a sender is in your contacts, and + adds one. |
 | Calendar | `calendar:`, `calendar:month`, `webcal://host/cal.ics` | Agenda, week and month views over local, CalDAV and followed ICS calendars, with repeating events, time zones and reminders. Invitations in mail are answered with Y, N or T: the event lands in your calendar and the organiser gets your answer. |
+| Chat | `chat:`, `ircs://irc.libera.chat/#alouette`, `matrix:r/room:matrix.org` | IRC networks and Matrix accounts side by side in one window, with a buffer list, nick list, completion and input history. IRC speaks IRCv3 (SASL PLAIN and EXTERNAL with a client certificate, server time, echo, chathistory) and reconnects by itself. Matrix rooms are end-to-end encrypted, with emoji verification of sessions and key backup recovery. Mentions raise notifications; logs are kept only if you turn them on. |
 | Web | `web:`, `https://en.wikipedia.org/` | A text web browser over HTTP/2 and HTTP/1.1. Reader mode, link hints, forms, cookies, history, bookmarks, downloads and save as Markdown. Pages that need JavaScript open in your own browser with one key. HTML mail uses the same renderer. |
 
 ## Three layouts, one set of windows
@@ -123,14 +125,14 @@ badge    IPv6 · TLS 1.3 · PQ
 | M4 | News (NNTP, RSS, Atom) and Social (Mastodon, Bluesky) |
 | M5 | Web reader |
 | M6 | Contacts (CardDAV, LDAP) and Calendar (CalDAV) |
-| M7 | Chat (IRC, Matrix, XMPP) |
+| M7 | Chat (IRC, Matrix; XMPP later) |
 | M8 | Assistant (opt-in AI: local CLIs, local network or cloud) |
 | M9 | `alouette serve`: Alouette over SSH |
 | M10 | Polish, accessibility, packaging, 1.0 |
 
 ## Building
 
-Rust 1.89 or newer. `cargo test --workspace` runs every test, including screen snapshots
+Rust 1.96 or newer. `cargo test --workspace` runs every test, including screen snapshots
 (`cargo insta review` updates them after an intended change).
 
 | Crate | Role |
@@ -144,7 +146,9 @@ Rust 1.89 or newer. `cargo test --workspace` runs every test, including screen s
 | `alouette-lookup` | Lookups shared by Inquire and NetTools |
 | `proto-gopher`, `proto-gemini`, `proto-finger`, `proto-whois`, `proto-dict` | Protocol clients that work over any async stream |
 | `alouette-pim` | vCard, iCalendar with recurrence, iTIP, CardDAV and CalDAV sync, LDAP |
-| `mod-burrow`, `mod-inquire`, `mod-nettools`, `mod-contacts`, `mod-calendar` and the other `mod-` crates | The modules |
+| `proto-irc` | IRC messages with IRCv3 tags, capability negotiation, SASL, formatting and a client state machine |
+| `alouette-matrix` | Matrix through the Matrix Rust SDK: sync, end-to-end encryption, verification, recovery |
+| `mod-burrow`, `mod-inquire`, `mod-nettools`, `mod-contacts`, `mod-calendar`, `mod-chat` and the other `mod-` crates | The modules |
 | `mod-demo` | A small example module |
 
 ## License

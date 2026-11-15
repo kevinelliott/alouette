@@ -33,6 +33,7 @@ mod-social.workspace = true
 mod-web.workspace = true
 mod-contacts.workspace = true
 mod-calendar.workspace = true
+mod-chat.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 crossterm.workspace = true

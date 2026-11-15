@@ -565,6 +565,93 @@ pub struct Directory {
     pub bind_dn: String,
 }
 
+/// The Chat module: IRC networks and Matrix accounts.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Chat {
+    /// Your nick on IRC networks that don't set one. Empty means your login name.
+    pub nick: String,
+    pub realname: String,
+    /// Keep plain-text logs of every buffer under the data folder.
+    pub logs: bool,
+    /// Toasts for new lines: "highlights" (mentions and private messages), "all" or "off".
+    pub notify: String,
+    /// Words besides your nick that count as a mention.
+    pub highlights: Vec<String>,
+    /// Show joins, parts and quits.
+    pub show_joins: bool,
+    /// Lines kept in memory per buffer.
+    pub scrollback: usize,
+    pub irc: Vec<IrcNetwork>,
+    pub matrix: Vec<MatrixAccount>,
+}
+
+impl Default for Chat {
+    fn default() -> Self {
+        Self {
+            nick: String::new(),
+            realname: "Alouette user".into(),
+            logs: false,
+            notify: "highlights".into(),
+            highlights: vec![],
+            show_joins: true,
+            scrollback: 2000,
+            irc: vec![],
+            matrix: vec![],
+        }
+    }
+}
+
+/// An IRC network. A SASL password, if any, lives in the secret store.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct IrcNetwork {
+    pub name: String,
+    /// `irc.libera.chat`, `irc.libera.chat:6697` or `host:6667` for plain text.
+    pub host: String,
+    /// Empty means `chat.nick`.
+    pub nick: String,
+    /// "none", "plain" (account and password) or "external" (a client certificate).
+    pub sasl: String,
+    /// The services account for SASL PLAIN; empty means the nick.
+    pub account: String,
+    /// A PEM file with a client certificate and key, for SASL EXTERNAL and CertFP.
+    pub cert: String,
+    /// Ask for a server password (bouncers such as soju and ZNC use one).
+    pub server_password: bool,
+    pub channels: Vec<String>,
+    /// Connect when Alouette starts.
+    pub autoconnect: bool,
+}
+
+impl Default for IrcNetwork {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            host: String::new(),
+            nick: String::new(),
+            sasl: "none".into(),
+            account: String::new(),
+            cert: String::new(),
+            server_password: false,
+            channels: vec![],
+            autoconnect: false,
+        }
+    }
+}
+
+/// A Matrix account. The session and the key store passphrase live in the secret store.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct MatrixAccount {
+    pub name: String,
+    /// A server name such as `matrix.org`, or a homeserver URL.
+    pub homeserver: String,
+    /// `@me:matrix.org`.
+    pub user: String,
+    pub autoconnect: bool,
+}
+
 /// The Calendar module.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -668,6 +755,7 @@ pub struct Config {
     pub inquire: Inquire,
     pub contacts: Contacts,
     pub calendar: Calendar,
+    pub chat: Chat,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,

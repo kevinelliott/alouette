@@ -167,6 +167,27 @@ view = "agenda"               # what calendar: opens: agenda, week or month
 # name = "holidays"
 # url = "webcal://example.com/holidays.ics"
 
+[chat]
+nick = ""                     # your IRC nick; empty means your login name
+realname = "Alouette user"
+logs = false                  # keep plain-text logs of chat buffers in the data folder
+notify = "highlights"         # toasts for mentions and private messages; "all" or "off"
+highlights = []               # words besides your nick that count as a mention
+show_joins = true             # show joins, parts and quits
+scrollback = 2000             # lines kept per buffer
+# [[chat.irc]]                # an IRC network; open irc://host/#channel to add one
+# name = "Libera"
+# host = "irc.libera.chat"    # port 6697 with TLS unless you give another
+# sasl = "plain"              # "plain" asks for your services password once; "external" uses cert
+# cert = "~/.config/alouette/libera.pem"
+# channels = ["#alouette"]
+# autoconnect = true
+# [[chat.matrix]]             # a Matrix account; type /matrix @you:server in Chat to add one
+# name = "matrix.org"
+# homeserver = "matrix.org"
+# user = "@me:matrix.org"
+# autoconnect = true
+
 [keys]
 # Override any key binding. Examples:
 # palette = "ctrl+p"
