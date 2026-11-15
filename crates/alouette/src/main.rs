@@ -79,6 +79,35 @@ enum Command {
         #[arg(long)]
         tofu: bool,
     },
+    /// Share Alouette with several people over SSH: `alouette serve`, then `ssh -p 2222 you@host`.
+    Serve {
+        /// Address to listen on (default: serve.listen in the config, 127.0.0.1:2222).
+        #[arg(long)]
+        listen: Option<String>,
+        /// The server's folder for its host key, users and guests (default: serve.root, or
+        /// a `serve` folder in Alouette's data folder).
+        #[arg(long, env = "ALOUETTE_SERVE_ROOT")]
+        root: Option<PathBuf>,
+        #[command(subcommand)]
+        action: Option<ServeCmd>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ServeCmd {
+    /// Add a user, or more keys for one, from an authorized_keys file or a GitHub login.
+    AddUser {
+        /// Lowercase letters, digits, - and _, starting with a letter.
+        name: String,
+        /// A public key or authorized_keys file (`-` reads standard input).
+        #[arg(long, conflicts_with = "github")]
+        key: Option<PathBuf>,
+        /// Import the public keys GitHub publishes for this login.
+        #[arg(long)]
+        github: Option<String>,
+    },
+    /// List the users, how many keys each has, and how much they store.
+    Users,
 }
 
 #[derive(Subcommand, Debug)]
@@ -150,6 +179,9 @@ fn real_main() -> Result<()> {
             let cfg = Config::load(&config_path).unwrap_or_default();
             return probe(&cfg, target, *plain, *tofu);
         }
+        if let Command::Serve { listen, root, action } = cmd {
+            return serve(&paths, &config_path, listen.as_deref(), root.clone(), action.as_ref());
+        }
         return subcommand(cmd, &paths, &config_path);
     }
 
@@ -194,6 +226,8 @@ fn real_main() -> Result<()> {
             show_splash: !cli.no_splash && !dumping,
             local_offset,
             deterministic: dumping,
+            max_windows: None,
+            window_count: None,
         };
         let (mut app, events) = App::new(opts);
         if let Some(e) = config_err {
@@ -271,7 +305,7 @@ fn subcommand(cmd: &Command, paths: &Paths, config_path: &std::path::Path) -> Re
                 )?;
             }
         }
-        Command::Probe { .. } => unreachable!("handled before"),
+        Command::Probe { .. } | Command::Serve { .. } => unreachable!("handled before"),
         Command::Paths => {
             println!("config   {}", config_path.display());
             println!("themes   {}", paths.themes_dir().display());
@@ -323,6 +357,99 @@ fn probe(cfg: &Config, target: &str, plain: bool, tofu: bool) -> Result<()> {
         println!("badge    {}", info.badge());
         Ok(())
     })
+}
+
+fn serve(
+    paths: &Paths,
+    config_path: &std::path::Path,
+    listen: Option<&str>,
+    root: Option<PathBuf>,
+    action: Option<&ServeCmd>,
+) -> Result<()> {
+    // Read before any threads start (a `time` crate rule).
+    let local_offset = time::UtcOffset::current_local_offset().unwrap_or(time::UtcOffset::UTC);
+    let cfg = Config::load(config_path).with_context(|| format!("reading {}", config_path.display()))?;
+    let root = root
+        .or_else(|| (!cfg.serve.root.is_empty()).then(|| PathBuf::from(&cfg.serve.root)))
+        .unwrap_or_else(|| paths.data_dir.join("serve"));
+    let users = alouette_serve::users::Users::new(&root);
+    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
+    match action {
+        Some(ServeCmd::AddUser { name, key, github }) => {
+            let text = match (key, github) {
+                (Some(p), _) if p.as_os_str() == "-" => std::io::read_to_string(std::io::stdin())?,
+                (Some(p), _) => std::fs::read_to_string(p).with_context(|| format!("reading {}", p.display()))?,
+                (None, Some(login)) => rt.block_on(async {
+                    let net = alouette_net::Net::new(&cfg.network)?;
+                    alouette_serve::users::github_keys(&net, login).await.map_err(anyhow::Error::msg)
+                })?,
+                (None, None) => anyhow::bail!("give --key FILE or --github LOGIN"),
+            };
+            let added = users.add(name, &text).map_err(anyhow::Error::msg)?;
+            println!(
+                "{name}: {added} new key{} ({} in all). They sign in with: ssh -p PORT {name}@HOST",
+                if added == 1 { "" } else { "s" },
+                users.keys(name).len()
+            );
+        }
+        Some(ServeCmd::Users) => {
+            let list = users.list();
+            if list.is_empty() {
+                println!("No users yet. Add one with: alouette serve add-user NAME --github LOGIN");
+            }
+            for u in list {
+                let admin = if cfg.serve.admins.contains(&u) { "  admin" } else { "" };
+                let k = users.keys(&u).len();
+                println!("{u:<20} {k} key{}  {:>8} KiB{admin}", if k == 1 { " " } else { "s" }, users.usage(&u) / 1024);
+            }
+        }
+        None => {
+            paths.ensure().context("creating Alouette's folders")?;
+            let _log_guard = init_logging(paths);
+            let listen = listen.map(str::to_string).unwrap_or_else(|| cfg.serve.listen.clone());
+            let opts = alouette_serve::ServeOptions {
+                config: cfg.serve.clone(),
+                root: root.clone(),
+                modules: std::sync::Arc::new(modules),
+                local_offset,
+            };
+            rt.block_on(async {
+                let running = alouette_serve::start(opts, &listen).await.map_err(anyhow::Error::msg)?;
+                println!("Alouette is serving on {} from {}", running.addr, root.display());
+                println!("host key {}", running.host_key.fingerprint(Default::default()));
+                let n = users.list().len();
+                println!(
+                    "{n} user{}{}. Press Ctrl+C to stop.",
+                    if n == 1 { "" } else { "s" },
+                    if cfg.serve.guest { ", guests welcome (ssh guest@…)" } else { "" }
+                );
+                stop_signal().await;
+                println!("Stopping; {} sessions were open.", running.registry.count());
+                for s in running.registry.snapshot() {
+                    s.kill("The server is shutting down.");
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                Ok::<_, anyhow::Error>(())
+            })?;
+        }
+    }
+    Ok(())
+}
+
+/// Ctrl+C, or the SIGTERM a container runtime sends to stop.
+async fn stop_signal() {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{SignalKind, signal};
+        if let Ok(mut term) = signal(SignalKind::terminate()) {
+            tokio::select! {
+                _ = tokio::signal::ctrl_c() => {}
+                _ = term.recv() => {}
+            }
+            return;
+        }
+    }
+    let _ = tokio::signal::ctrl_c().await;
 }
 
 fn init_logging(paths: &Paths) -> Option<tracing_appender::non_blocking::WorkerGuard> {

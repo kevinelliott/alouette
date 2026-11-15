@@ -201,3 +201,21 @@ scrollback = 2000             # lines kept per buffer
 # Override any key binding. Examples:
 # palette = "ctrl+p"
 # quit = ["alt+x", "ctrl+q"]
+
+[serve]
+# `alouette serve` runs Alouette for several people over SSH. Each user signs in with a key
+# (alouette serve add-user NAME --github LOGIN) and gets their own settings and data.
+listen = "127.0.0.1:2222"
+admins = []                   # users who get the admin console, serve:
+guest = false                 # let anyone in as "guest" with a fresh profile
+deny = ["terminal", "files"]  # these would reach out with the server's own SSH identity
+guest_modules = ["burrow", "inquire", "nettools", "web", "feeds", "news"]
+max_sessions = 32
+sessions_per_user = 3
+max_guests = 8
+max_windows = 16
+guest_max_windows = 4
+idle_minutes = 60             # 0 means never
+guest_minutes = 30
+quota_mb = 500
+allow_private = false         # let users reach this server's localhost and private networks

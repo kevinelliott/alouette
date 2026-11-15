@@ -57,7 +57,7 @@ impl Net {
         if !self.is_direct(host) {
             return Err(NetError::Proxy("HTTP/3 needs a direct connection".into()));
         }
-        let mut addrs = self.resolve(host, port).await?;
+        let mut addrs = crate::reachable(host, self.resolve(host, port).await?)?;
         // Prefer the configured family, as Happy Eyeballs does for TCP.
         addrs.sort_by_key(|a| a.is_ipv6() != self.inner.prefer_v6);
         let mut cfg = crate::tls::client_config_ech(verify, true, &[b"h3"], ech, None)?;

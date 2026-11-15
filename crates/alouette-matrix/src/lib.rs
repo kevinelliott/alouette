@@ -603,6 +603,12 @@ pub async fn run(opts: Options, tx: mpsc::UnboundedSender<Update>, mut cmds: mps
         rooms: Mutex::new(vec![]),
     });
     let fail = |e: &dyn std::fmt::Display| Stop::Failed(e.to_string());
+    // The Matrix SDK makes its own connections, so a shared server checks the homeserver here.
+    let hs_host =
+        account.homeserver.split("://").last().unwrap_or_default().split(['/', '?']).next().unwrap_or_default();
+    if let Some(why) = private_host(hs_host).await {
+        return fail(&why);
+    }
     let mut builder = Client::builder()
         .sqlite_store(&store, Some(&passphrase))
         .user_agent(concat!("Alouette/", env!("CARGO_PKG_VERSION")));
@@ -618,6 +624,13 @@ pub async fn run(opts: Options, tx: mpsc::UnboundedSender<Update>, mut cmds: mps
         Ok(c) => c,
         Err(e) => return fail(&e),
     };
+    // Discovery may have led somewhere else.
+    if let Some(h) = client.homeserver().host_str().map(str::to_string)
+        && let Some(why) =
+            private_host(&format!("{h}:{}", client.homeserver().port_or_known_default().unwrap_or(443))).await
+    {
+        return fail(&why);
+    }
     let restored = match session.as_deref().map(serde_json::from_str::<MatrixSession>) {
         Some(Ok(s)) => client.matrix_auth().restore_session(s, Default::default()).await.is_ok(),
         _ => false,
@@ -689,6 +702,26 @@ pub async fn run(opts: Options, tx: mpsc::UnboundedSender<Update>, mut cmds: mps
     };
     sync.abort();
     stop
+}
+
+/// On a shared server, why `host` (or `host:port`) may not be reached, if it may not.
+async fn private_host(host: &str) -> Option<String> {
+    if !alouette_core::shared::restricted() || host.is_empty() {
+        return None;
+    }
+    let target =
+        if host.rsplit_once(':').is_some_and(|(h, p)| !h.is_empty() && !h.ends_with(':') && p.parse::<u16>().is_ok())
+            && (!host.contains("::") || host.contains(']'))
+        {
+            host.to_string()
+        } else {
+            format!("{host}:443")
+        };
+    let addrs: Vec<_> = tokio::net::lookup_host(target).await.ok()?.collect();
+    addrs
+        .iter()
+        .any(|a| alouette_core::shared::blocked_ip(a.ip()))
+        .then(|| format!("{host} is on this server's own network, which is {}", alouette_core::shared::REFUSED))
 }
 
 #[cfg(test)]

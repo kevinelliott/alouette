@@ -865,6 +865,10 @@ pub fn human(bytes: usize) -> String {
 
 /// Open a URL in the person's own browser.
 pub fn open_external(url: &str, command: &str) {
+    // Only web links, and never on a shared server, where the browser would be the server's.
+    if alouette_core::shared::restricted() || !(url.starts_with("https://") || url.starts_with("http://")) {
+        return;
+    }
     if !command.trim().is_empty() {
         let mut parts = command.split_whitespace();
         if let Some(prog) = parts.next() {
@@ -880,7 +884,8 @@ pub fn open_external(url: &str, command: &str) {
     let r = if cfg!(target_os = "macos") {
         std::process::Command::new("open").arg(url).spawn()
     } else if cfg!(windows) {
-        std::process::Command::new("cmd").args(["/C", "start", "", url]).spawn()
+        // Not `cmd /C start`: cmd would treat & and | in the URL as commands.
+        std::process::Command::new("rundll32").args(["url.dll,FileProtocolHandler", url]).spawn()
     } else {
         std::process::Command::new("xdg-open")
             .arg(url)

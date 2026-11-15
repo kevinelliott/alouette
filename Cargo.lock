@@ -94,6 +94,7 @@ dependencies = [
  "alouette-core",
  "alouette-net",
  "alouette-nostalgia",
+ "alouette-serve",
  "alouette-store",
  "alouette-ui",
  "anyhow",
@@ -219,6 +220,7 @@ dependencies = [
 name = "alouette-matrix"
 version = "0.1.0"
 dependencies = [
+ "alouette-core",
  "alouette-matrix",
  "futures",
  "getrandom 0.3.4",
@@ -273,6 +275,28 @@ dependencies = [
  "quick-xml",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "alouette-serve"
+version = "0.1.0"
+dependencies = [
+ "alouette-core",
+ "alouette-net",
+ "alouette-store",
+ "alouette-ui",
+ "aws-lc-rs",
+ "crossterm",
+ "futures",
+ "getrandom 0.3.4",
+ "ratatui",
+ "russh",
+ "serde_json",
+ "time",
+ "tokio",
+ "tracing",
+ "url",
+ "vt100",
 ]
 
 [[package]]

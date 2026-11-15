@@ -443,6 +443,10 @@ impl ContactsWindow {
     }
 
     fn import(&mut self, path: &str, cx: &mut Cx) {
+        if alouette_core::shared::restricted() {
+            self.note = Some(format!("Importing a file is {}.", alouette_core::shared::REFUSED));
+            return;
+        }
         let path = path.trim();
         let path = match path.strip_prefix("~/") {
             Some(rest) => std::env::var_os("HOME").map(|h| PathBuf::from(h).join(rest)).unwrap_or_else(|| rest.into()),

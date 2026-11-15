@@ -53,7 +53,9 @@ impl Paths {
     /// Where downloads go: the user's Downloads folder, or `data/downloads` under
     /// `ALOUETTE_HOME`.
     pub fn downloads_dir(&self) -> PathBuf {
+        // On a shared server every person's downloads stay in their own folder.
         if std::env::var_os("ALOUETTE_HOME").is_none()
+            && !crate::shared::restricted()
             && let Some(d) = directories::UserDirs::new().and_then(|u| u.download_dir().map(Path::to_path_buf))
         {
             return d;

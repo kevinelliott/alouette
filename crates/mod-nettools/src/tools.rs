@@ -73,6 +73,9 @@ async fn ping(
 ) -> Result<(), String> {
     let addrs = net.resolve(host, tcp_port.unwrap_or(0)).await.map_err(|e| e.to_string())?;
     let ip = addrs.first().map(|a| a.ip()).ok_or("no address")?;
+    if alouette_core::shared::blocked_ip(ip) {
+        return Err(format!("{host} is on this server's own network, which is {}", alouette_core::shared::REFUSED));
+    }
     let mut icmp = None;
     if tcp_port.is_none() {
         match icmp_client(ip) {
@@ -182,6 +185,16 @@ impl NoPinger {
 }
 
 async fn trace(host: &str, ctx: &TaskCtx, send: &impl Fn(Msg)) -> Result<(), String> {
+    // The host goes to a system program; never let it read as an option.
+    if host.starts_with('-') || host.chars().any(|c| c.is_whitespace() || c.is_control()) {
+        return Err(format!("not a host name: {host}"));
+    }
+    if alouette_core::shared::restricted() {
+        let addrs: Vec<_> = tokio::net::lookup_host((host, 0)).await.map_err(|e| format!("{host}: {e}"))?.collect();
+        if addrs.iter().any(|a| alouette_core::shared::blocked_ip(a.ip())) {
+            return Err(format!("{host} is on this server's own network, which is {}", alouette_core::shared::REFUSED));
+        }
+    }
     use tokio::io::{AsyncBufReadExt, BufReader};
     let candidates: &[(&str, &[&str])] = if cfg!(windows) {
         &[("tracert", &["-d", "-w", "2000"])]
@@ -251,6 +264,9 @@ async fn scan(net: &Net, host: &str, ports: &[u16], ctx: &TaskCtx, send: &impl F
 }
 
 async fn mdns(ctx: &TaskCtx, send: &impl Fn(Msg)) -> Result<(), String> {
+    if alouette_core::shared::blocked_ip(std::net::Ipv4Addr::new(224, 0, 0, 251).into()) {
+        return Err(format!("browsing this server's local network is {}", alouette_core::shared::REFUSED));
+    }
     const TYPES: &[(&str, &str)] = &[
         ("_http._tcp.local.", "Web"),
         ("_https._tcp.local.", "Web (TLS)"),

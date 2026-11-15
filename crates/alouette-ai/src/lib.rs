@@ -78,6 +78,11 @@ impl Kind {
         !matches!(self, Kind::Ollama | Kind::Command)
     }
 
+    /// True for providers reached over HTTP rather than a program on this machine.
+    pub fn is_http(self) -> bool {
+        matches!(self, Kind::Ollama | Kind::OpenAi | Kind::Anthropic | Kind::Gemini)
+    }
+
     /// True when the provider needs an API key from the person.
     pub fn needs_key(self) -> bool {
         matches!(self, Kind::OpenAi | Kind::Anthropic | Kind::Gemini)
@@ -193,7 +198,8 @@ pub struct Provider {
 impl Provider {
     /// Build from the config. `key` is the API key, when the provider needs one.
     pub fn from_config(cfg: &Ai, key: Option<String>) -> Result<Self, String> {
-        Self::build(cfg, key, |v| std::env::var(v).ok())
+        // On a shared server the environment's keys are the operator's, not this person's.
+        Self::build(cfg, key, |v| if alouette_core::shared::restricted() { None } else { std::env::var(v).ok() })
     }
 
     fn build(cfg: &Ai, key: Option<String>, env: impl Fn(&str) -> Option<String>) -> Result<Self, String> {
@@ -235,6 +241,9 @@ impl Provider {
 
     /// Ask. Returns the answer, or why there is none.
     pub async fn ask(&self, net: &Net, req: &Request) -> Result<Reply, String> {
+        if alouette_core::shared::restricted() && !self.kind.is_http() {
+            return Err(format!("{} is {}", self.kind.label(), alouette_core::shared::REFUSED));
+        }
         match self.kind {
             Kind::ClaudeCli | Kind::CodexCli | Kind::GeminiCli | Kind::Command => cli::ask(self, req).await,
             Kind::Ollama | Kind::OpenAi | Kind::Anthropic | Kind::Gemini => http::ask(self, net, req).await,

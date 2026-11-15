@@ -7,7 +7,7 @@ news and feeds, Gopher and Gemini, search and lookups, file transfer, SSH and Te
 network tools, contacts, a calendar, chat, the fediverse and an optional AI assistant, all in one
 window manager.
 
-> **Status: milestone M8 (Assistant).** The shell, the network layer and fourteen modules
+> **Status: milestone M9 (`alouette serve`).** The shell, the network layer and fourteen modules
 > work today: **Burrow** (Gopher, Gemini, Finger), **Inquire** (one box that asks DNS, RDAP, WHOIS,
 > BGP, certificate logs, WebFinger, OpenPGP WKD, DICT, Veronica-2 and Gemini search at once),
 > **NetTools** (ping, traceroute, DNS, ports, TLS inspection, mDNS), **Terminal** (local shells,
@@ -16,8 +16,9 @@ window manager.
 > **Feeds** (RSS, Atom and JSON Feed), **Social** (Mastodon and compatible servers), **Web**
 > (a text browser with reader mode), **Contacts** (CardDAV and LDAP), **Calendar** (CalDAV,
 > ICS subscriptions and invitations), **Chat** (IRC and end-to-end encrypted Matrix) and the
-> **Assistant** (opt-in AI through a local CLI, Ollama or an API key). The rest
-> arrive milestone by milestone; see the plan below.
+> **Assistant** (opt-in AI through a local CLI, Ollama or an API key). `alouette serve` shares
+> one machine's Alouette with several people over SSH. Polish and 1.0 come next; see the plan
+> below.
 
 ## Try it
 
@@ -48,6 +49,34 @@ downloads and watch them in the Tasks window, where you can cancel and retry the
 | Chat | `chat:`, `ircs://irc.libera.chat/#alouette`, `matrix:r/room:matrix.org` | IRC networks and Matrix accounts side by side in one window, with a buffer list, nick list, completion and input history. IRC speaks IRCv3 (SASL PLAIN and EXTERNAL with a client certificate, server time, echo, chathistory) and reconnects by itself. Matrix rooms are end-to-end encrypted, with emoji verification of sessions and key backup recovery. Mentions raise notifications; logs are kept only if you turn them on. |
 | Assistant | F2 in any window, `ai:` | Off until you pick a provider: the claude, codex or gemini CLI, a local Ollama, any command, or the Anthropic, OpenAI-compatible or Gemini API. Summarizes, drafts replies, triages mailboxes, explains terminal output and answers questions, including over your cached mail. Shows exactly what will be sent with personal details redacted, asks per module, and keeps a monthly cost meter and budget. |
 | Web | `web:`, `https://en.wikipedia.org/` | A text web browser over HTTP/2 and HTTP/1.1. Reader mode, link hints, forms, cookies, history, bookmarks, downloads and save as Markdown. Pages that need JavaScript open in your own browser with one key. HTML mail uses the same renderer. |
+
+## Alouette for a group: `alouette serve`
+
+One machine can run Alouette for several people, the way a campus host once offered Gopher and
+mail to anyone with a terminal. People sign in over SSH with their keys and each get their own
+settings, mail, bookmarks and saved passwords; nobody sees anyone else's.
+
+```sh
+alouette serve add-user ann --github ann-on-github   # or --key ann.pub
+alouette serve                                        # listens on 127.0.0.1:2222
+ssh -p 2222 ann@host
+```
+
+Or in a container, with everything kept in one volume:
+
+```sh
+docker build -t alouette .
+docker run -d --name alouette -p 2222:2222 -v alouette:/data alouette
+docker exec alouette alouette serve add-user ann --github ann-on-github
+```
+
+The `[serve]` settings choose who may come in (`guest = true` lets anyone in as `guest` with a
+fresh profile that is thrown away afterwards), which modules each may open, and the limits:
+sessions in all, sessions per user, guests, windows per session, idle and guest time, and a
+storage quota. Admins listed in `serve.admins` get `serve:`, a console of who is connected that
+can end a session. On a shared server Alouette never offers the server's own shell, files,
+programs, browser, API keys or private network to the people using it. See the manual for
+details.
 
 ## Three layouts, one set of windows
 
@@ -150,6 +179,7 @@ Rust 1.96 or newer. `cargo test --workspace` runs every test, including screen s
 | `alouette-pim` | vCard, iCalendar with recurrence, iTIP, CardDAV and CalDAV sync, LDAP |
 | `proto-irc` | IRC messages with IRCv3 tags, capability negotiation, SASL, formatting and a client state machine |
 | `alouette-matrix` | Matrix through the Matrix Rust SDK: sync, end-to-end encryption, verification, recovery |
+| `alouette-serve` | `alouette serve`: the SSH server, terminal input over SSH, per-user folders and sealed secrets, limits and the admin console |
 | `alouette-ai` | AI providers (CLIs, Ollama, OpenAI-compatible, Anthropic, Gemini), redaction, cost meter, cache search |
 | `mod-burrow`, `mod-inquire`, `mod-nettools`, `mod-contacts`, `mod-calendar`, `mod-chat` and the other `mod-` crates | The modules |
 | `mod-demo` | A small example module |

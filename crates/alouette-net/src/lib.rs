@@ -40,6 +40,17 @@ pub enum NetError {
     Tls(String),
     #[error("timed out connecting to {0}")]
     Timeout(String),
+    #[error("{0} is on this server's own network, which is not available on a shared Alouette server")]
+    Private(String),
+}
+
+/// Drop addresses a shared server must not reach; fail if that leaves none.
+pub(crate) fn reachable(host: &str, addrs: Vec<SocketAddr>) -> Result<Vec<SocketAddr>, NetError> {
+    if addrs.is_empty() {
+        return Ok(addrs);
+    }
+    let ok: Vec<SocketAddr> = addrs.into_iter().filter(|a| !alouette_core::shared::blocked_ip(a.ip())).collect();
+    if ok.is_empty() { Err(NetError::Private(host.to_string())) } else { Ok(ok) }
 }
 
 /// Anything a module can read from and write to.
@@ -195,11 +206,11 @@ impl Net {
         let via = self.inner.routes.pick(host)?.clone();
         let (stream, peer) = match &via {
             Via::Direct => {
-                let addrs = self.resolve(host, port).await?;
+                let addrs = reachable(host, self.resolve(host, port).await?)?;
                 happy::connect(&addrs, self.inner.prefer_v6).await?
             }
             Via::Socks5 { proxy, remote_dns, auth } => {
-                let addrs = self.resolve(&proxy.host, proxy.port).await?;
+                let addrs = reachable(&proxy.host, self.resolve(&proxy.host, proxy.port).await?)?;
                 let (mut s, peer) = happy::connect(&addrs, self.inner.prefer_v6).await?;
                 let dns = self.inner.dns.clone();
                 proxy::socks5(&mut s, host, port, *remote_dns, auth.as_ref(), async |h| {
@@ -209,7 +220,7 @@ impl Net {
                 (s, peer)
             }
             Via::Http { proxy, auth } => {
-                let addrs = self.resolve(&proxy.host, proxy.port).await?;
+                let addrs = reachable(&proxy.host, self.resolve(&proxy.host, proxy.port).await?)?;
                 let (mut s, peer) = happy::connect(&addrs, self.inner.prefer_v6).await?;
                 proxy::http_connect(&mut s, host, port, auth.as_ref()).await?;
                 (s, peer)

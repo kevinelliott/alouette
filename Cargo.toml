@@ -43,6 +43,7 @@ alouette-matrix = { path = "crates/alouette-matrix", version = "0.1.0" }
 mod-chat = { path = "crates/mod-chat", version = "0.1.0" }
 alouette-ai = { path = "crates/alouette-ai", version = "0.1.0" }
 mod-assistant = { path = "crates/mod-assistant", version = "0.1.0" }
+alouette-serve = { path = "crates/alouette-serve", version = "0.1.0" }
 
 proto-nntp = { path = "crates/proto-nntp", version = "0.1.0" }
 proto-smtp = { path = "crates/proto-smtp", version = "0.1.0" }
@@ -93,6 +94,12 @@ inherits = "release"
 lto = "fat"
 # Size over speed: a TUI spends its time waiting on the network and the person.
 opt-level = "s"
+
+# For servers (the container image): unwinding costs about 7 MB, and lets a fault in one
+# `alouette serve` session close that session only instead of the whole server.
+[profile.serve]
+inherits = "dist"
+panic = "unwind"
 
 # Smaller debug builds: line tables for our code, no debug info for dependencies.
 [profile.dev]

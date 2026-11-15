@@ -120,6 +120,18 @@ Before anything goes out, the Assistant shows exactly what will be sent, with it
 
 The header shows the month's requests and estimated cost, kept in the data folder's ai-usage.json. ai.monthly_budget stops sending once that many dollars are spent. Prices are built in for Anthropic models; for others set ai.price_in and ai.price_out (dollars per million tokens). The claude CLI reports its own cost. Other settings: ai.model, ai.base_url (for an OpenAI-compatible server such as LM Studio, or an Ollama elsewhere), ai.max_tokens and ai.max_chars (the most content sent at once).
 
+## Serving Alouette over SSH
+
+alouette serve runs Alouette for several people at once. Each person connects with an ordinary SSH client (ssh -p 2222 name@host) and gets a desktop of their own. Add people with alouette serve add-user NAME --key FILE, where FILE is a public key or an authorized_keys file (- reads it from standard input), or --github LOGIN to use the keys GitHub publishes for that login. Run the command again to add more keys. alouette serve users lists everyone with their key count and how much they store. Only key sign-in is offered, never passwords.
+
+The server keeps everything in one folder, serve.root (by default a serve folder in Alouette's data folder, /data/serve in the container image): its host key, the key that seals saved passwords, and a folder for each user under users/ holding their authorized_keys file and their own settings, data and cache. A user's passwords and tokens go into a file sealed with ChaCha20-Poly1305 rather than a keychain, since the server's keychain would be shared by everyone. The server prints its host key fingerprint when it starts; tell people what it is so they can check it the first time they connect.
+
+guest = true lets anyone sign in as guest with no key. A guest gets a fresh profile that lives only in memory and in a temporary folder removed when they leave, the modules in serve.guest_modules, fewer windows (serve.guest_max_windows) and a time limit (serve.guest_minutes).
+
+serve.modules lists the modules users may open (empty means all but those in serve.deny). Terminal and Files are denied by default because they would reach other machines with the server's own SSH identity. Whatever the lists say, a shared server never runs a local shell or program, never opens local files or the server's browser, never uses API keys from the server's environment, and never connects to the server itself or its private network (serve.allow_private = true allows that last one, for a server meant to reach its own LAN). The limits are serve.max_sessions in all, serve.sessions_per_user, serve.max_guests, serve.max_windows per session, serve.idle_minutes without a key press before a disconnect, and serve.quota_mb, past which a user is warned at sign-in.
+
+Users listed in serve.admins can open serve:, the server console. It shows each session's user, address, time connected, idle time, windows and screen size, and k ends the selected session with a note saying why.
+
 ## Configuration
 
 Settings live in alouette.toml. Run "alouette config path" to find it. Alouette reloads the file as soon as you save it. The Settings window changes common options for you and saves the file.
@@ -142,4 +154,4 @@ The splash screen, drop shadows, desktop pattern, Minuet's module names, sounds 
 
 ## Privacy
 
-Alouette sends no telemetry. The offline cache and the Assistant are off until you turn them on, and the Assistant shows what it will send and asks before content leaves the machine. Passwords and tokens are kept in your operating system's keychain.
+Alouette sends no telemetry. The offline cache and the Assistant are off until you turn them on, and the Assistant shows what it will send and asks before content leaves the machine. Passwords and tokens are kept in your operating system's keychain (on a shared server, in each user's own sealed file).

@@ -76,6 +76,9 @@ pub async fn connect(t: Target, asker: Asker) -> Result<(Arc<dyn Fs>, String), S
     let start = |home: String| if path.is_empty() || path == "/" { home } else { path.clone() };
     match u.scheme() {
         "file" | "files" => {
+            if alouette_core::shared::restricted() {
+                return Err(format!("Local files are {}", alouette_core::shared::REFUSED));
+            }
             let fs: Arc<dyn Fs> = Arc::new(Local);
             let home = fs.home().await?;
             let p = if u.scheme() == "file" {

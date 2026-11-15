@@ -608,6 +608,71 @@ pub struct Directory {
     pub bind_dn: String,
 }
 
+/// `alouette serve`: Alouette for several people over SSH.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Serve {
+    /// Address and port to listen on.
+    pub listen: String,
+    /// Folder for users, guests and the host key. Empty means `serve` in the data folder.
+    pub root: String,
+    /// Users who get the admin console (`serve:`).
+    pub admins: Vec<String>,
+    /// Let anyone in as `guest`, with no key, a fresh empty profile and stricter limits.
+    pub guest: bool,
+    /// Modules users may open. Empty means every module except those in `deny`.
+    pub modules: Vec<String>,
+    /// Modules no user may open. Terminal and Files reach out with the server's own SSH
+    /// identity, so they are off unless you take them out of this list.
+    pub deny: Vec<String>,
+    /// Modules a guest may open.
+    pub guest_modules: Vec<String>,
+    /// The most sessions at once, for everyone together.
+    pub max_sessions: usize,
+    /// The most sessions one user may have at once.
+    pub sessions_per_user: usize,
+    /// The most guests at once.
+    pub max_guests: usize,
+    /// The most windows open in one session.
+    pub max_windows: usize,
+    pub guest_max_windows: usize,
+    /// Disconnect after this many minutes without a key press. 0 means never.
+    pub idle_minutes: u64,
+    /// A guest session ends after this many minutes.
+    pub guest_minutes: u64,
+    /// Warn a user whose folder grows beyond this many megabytes. 0 means no limit.
+    pub quota_mb: u64,
+    /// Shown before the desktop opens.
+    pub banner: String,
+    /// Let users reach the server's own loopback and private networks. Off, so nobody can
+    /// use the server to look at services meant only for it or its LAN.
+    pub allow_private: bool,
+}
+
+impl Default for Serve {
+    fn default() -> Self {
+        Self {
+            listen: "127.0.0.1:2222".into(),
+            root: String::new(),
+            admins: Vec::new(),
+            guest: false,
+            modules: Vec::new(),
+            deny: vec!["terminal".into(), "files".into()],
+            guest_modules: ["burrow", "inquire", "nettools", "web", "feeds", "news"].map(String::from).to_vec(),
+            max_sessions: 32,
+            sessions_per_user: 3,
+            max_guests: 8,
+            max_windows: 16,
+            guest_max_windows: 4,
+            idle_minutes: 60,
+            guest_minutes: 30,
+            quota_mb: 500,
+            banner: String::new(),
+            allow_private: false,
+        }
+    }
+}
+
 /// The Chat module: IRC networks and Matrix accounts.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -799,6 +864,7 @@ pub struct Config {
     pub contacts: Contacts,
     pub calendar: Calendar,
     pub chat: Chat,
+    pub serve: Serve,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,

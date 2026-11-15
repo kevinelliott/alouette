@@ -26,6 +26,8 @@ fn app(layout: LayoutKind, keymap: KeymapPreset) -> App {
         show_splash: false,
         local_offset: time::UtcOffset::UTC,
         deterministic: true,
+        max_windows: None,
+        window_count: None,
     });
     app.set_screen(ratatui::layout::Rect::new(0, 0, 100, 30));
     app.open_all(&["about:welcome".into(), "demo:hello".into(), "demo:jobs".into()]);

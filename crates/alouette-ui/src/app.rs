@@ -36,6 +36,10 @@ pub struct AppOptions {
     pub local_offset: UtcOffset,
     /// Freeze the clock and tips, for snapshot tests and screen dumps.
     pub deterministic: bool,
+    /// The most windows open at once, for shared servers. `None` means no limit.
+    pub max_windows: Option<usize>,
+    /// Kept up to date with the number of open windows, for a server's admin console.
+    pub window_count: Option<std::sync::Arc<std::sync::atomic::AtomicUsize>>,
 }
 
 /// An in-progress mouse drag on the desktop.
@@ -74,6 +78,8 @@ pub struct App {
     screen: Rect,
     local_offset: UtcOffset,
     deterministic: bool,
+    max_windows: Option<usize>,
+    window_count: Option<std::sync::Arc<std::sync::atomic::AtomicUsize>>,
     last_minute: i64,
     pub dirty: bool,
     pub quit: bool,
@@ -130,6 +136,8 @@ impl App {
             screen: Rect::new(0, 0, 80, 24),
             local_offset: opts.local_offset,
             deterministic: opts.deterministic,
+            max_windows: opts.max_windows,
+            window_count: opts.window_count,
             last_minute: 0,
             dirty: true,
             quit: false,
@@ -154,6 +162,21 @@ impl App {
     }
 
     /// A sender other code can use to wake the app.
+    /// End the session: stop every task and close every window. Modules are dropped with
+    /// the app, which ends their connections.
+    pub fn shutdown(&mut self) {
+        self.tasks.cancel_all();
+        let ids: Vec<_> = self.wm.ordered().map(|m| m.id).collect();
+        for id in ids {
+            self.wm.remove(id);
+        }
+    }
+
+    /// How many windows are open.
+    pub fn window_count(&self) -> usize {
+        self.wm.len()
+    }
+
     pub fn sender(&self) -> EventSender {
         self.events.clone()
     }
@@ -270,6 +293,9 @@ impl App {
             return;
         }
         let Some(idx) = self.modules.iter().position(|m| m.id() == route.module) else { return };
+        if self.at_window_limit() {
+            return;
+        }
         let (result, effects) = {
             let App { modules, theme, config, keymap, tasks, net, store, secrets, config_path, .. } = self;
             let mut cx = Cx {
@@ -304,7 +330,24 @@ impl App {
         self.dirty = true;
     }
 
+    /// True (with a toast) when no more windows may open.
+    fn at_window_limit(&mut self) -> bool {
+        match self.max_windows {
+            Some(max) if self.wm.len() >= max => {
+                self.notify(Notification::warning(format!(
+                    "This server allows {max} window{} at once. Close one to open another.",
+                    if max == 1 { "" } else { "s" }
+                )));
+                true
+            }
+            _ => false,
+        }
+    }
+
     pub fn open_window(&mut self, win: Box<dyn Window>) {
+        if self.at_window_limit() {
+            return;
+        }
         let area = self.desktop_area();
         self.wm.add(win, area);
         self.dirty = true;
@@ -995,6 +1038,9 @@ impl App {
     }
 
     pub fn draw(&mut self, frame: &mut Frame) {
+        if let Some(c) = &self.window_count {
+            c.store(self.wm.len(), std::sync::atomic::Ordering::Relaxed);
+        }
         let screen = frame.area();
         self.screen = screen;
         let now = Instant::now();

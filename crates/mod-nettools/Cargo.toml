@@ -19,7 +19,7 @@ futures.workspace = true
 mdns-sd.workspace = true
 mod-inquire.workspace = true
 ratatui.workspace = true
-tokio = { workspace = true, features = ["process", "io-util", "time"] }
+tokio = { workspace = true, features = ["process", "io-util", "time", "net"] }
 url.workspace = true
 
 [target.'cfg(unix)'.dependencies]

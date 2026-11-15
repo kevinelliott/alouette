@@ -72,3 +72,28 @@ jobs:
           echo "alouette is $((size / 1024)) KiB" >> "$GITHUB_STEP_SUMMARY"
           # The plan's budget for 1.0 is 40 MiB; fail early if M0 is already far off.
           test "$size" -lt $((40 * 1024 * 1024))
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: alouette:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Start it and check it listens
+        run: |
+          docker run -d --name alouette -p 2222:2222 alouette:ci
+          for i in $(seq 1 20); do
+            docker logs alouette 2>&1 | grep -q "Alouette is serving" && break
+            sleep 1
+          done
+          docker logs alouette
+          docker logs alouette 2>&1 | grep -q "Alouette is serving"
+          docker exec alouette alouette serve users

@@ -13,6 +13,7 @@ pub mod message;
 pub mod notify;
 pub mod paths;
 pub mod router;
+pub mod shared;
 pub mod task;
 
 pub use config::{Config, ConfigWatcher};

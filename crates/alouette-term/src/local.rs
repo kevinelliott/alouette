@@ -19,6 +19,9 @@ pub fn default_shell() -> String {
 /// Run `program` (split on spaces; the first word is the command) until it exits or the
 /// window closes.
 pub async fn run(wire: Wire, program: &str, term: &str) -> Result<(), String> {
+    if alouette_core::shared::restricted() {
+        return Err(format!("Local programs are {}", alouette_core::shared::REFUSED));
+    }
     let Wire { shared, mut input } = wire;
     let size = {
         let p = shared.parser();

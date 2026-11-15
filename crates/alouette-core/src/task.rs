@@ -215,6 +215,14 @@ impl TaskManager {
         .unwrap_or(false)
     }
 
+    /// Stop every running task, as when a session ends.
+    pub fn cancel_all(&self) {
+        let inner = self.inner.lock().expect("task lock");
+        for e in inner.entries.iter().filter(|e| e.info.state == TaskState::Running) {
+            e.cancel.cancel();
+        }
+    }
+
     /// Run a finished task again with the same job. Returns false if it is still running.
     pub fn retry(&self, id: TaskId) -> bool {
         let factory = self.with_entry(id, |e| {

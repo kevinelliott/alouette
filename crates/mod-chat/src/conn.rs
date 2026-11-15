@@ -214,6 +214,9 @@ async fn irc_once(ctx: &Ctx, name: &str) -> (bool, Option<String>) {
     };
     let client_cert = if cfg.cert.is_empty() {
         None
+    } else if alouette_core::shared::restricted() {
+        // The file would be the server's, not this person's.
+        return (false, Some(format!("a client certificate file is {}", alouette_core::shared::REFUSED)));
     } else {
         match ClientCert::load(&tilde(&cfg.cert), None) {
             Ok(c) => {

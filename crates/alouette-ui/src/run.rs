@@ -14,11 +14,25 @@ use crate::app::App;
 pub const TICK: Duration = Duration::from_millis(250);
 
 /// Run until the app asks to quit. The caller owns terminal setup and teardown.
-pub async fn run<B: Backend>(terminal: &mut Terminal<B>, app: &mut App, mut events: EventReceiver) -> anyhow::Result<()>
+pub async fn run<B: Backend>(terminal: &mut Terminal<B>, app: &mut App, events: EventReceiver) -> anyhow::Result<()>
 where
     B::Error: Send + Sync + 'static,
 {
-    let mut input = EventStream::new();
+    run_with(terminal, app, events, EventStream::new()).await
+}
+
+/// The same loop with input from any stream of terminal events, such as an SSH channel's.
+pub async fn run_with<B, S>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+    mut events: EventReceiver,
+    mut input: S,
+) -> anyhow::Result<()>
+where
+    B: Backend,
+    B::Error: Send + Sync + 'static,
+    S: futures::Stream<Item = std::io::Result<crossterm::event::Event>> + Unpin,
+{
     let mut tick = tokio::time::interval(TICK);
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     let size = terminal.size()?;

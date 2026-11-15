@@ -185,10 +185,14 @@ async fn device_flow(net: &Net, p: &Provider, acct: &Account, prompt: &dyn Promp
 
 /// Open a URL in the person's browser, if we can. They also see it in a note.
 fn open_browser(url: &str) {
+    if alouette_core::shared::restricted() || !url.starts_with("https://") {
+        return;
+    }
     let r = if cfg!(target_os = "macos") {
         std::process::Command::new("open").arg(url).spawn()
     } else if cfg!(windows) {
-        std::process::Command::new("cmd").args(["/C", "start", "", url]).spawn()
+        // Not `cmd /C start`: cmd would treat & and | in the URL as commands.
+        std::process::Command::new("rundll32").args(["url.dll,FileProtocolHandler", url]).spawn()
     } else {
         std::process::Command::new("xdg-open")
             .arg(url)

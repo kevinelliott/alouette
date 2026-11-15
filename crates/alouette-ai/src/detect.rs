@@ -54,8 +54,9 @@ fn is_exec(p: &Path) -> bool {
 /// Look for CLIs on PATH, a running Ollama, and keys in the environment.
 pub async fn detect(net: &Net, ollama_base: Option<&str>) -> Vec<Found> {
     let mut out = Vec::new();
+    let local = !alouette_core::shared::restricted();
     for (kind, prog) in [(Kind::ClaudeCli, "claude"), (Kind::CodexCli, "codex"), (Kind::GeminiCli, "gemini")] {
-        if let Some(p) = which(prog) {
+        if local && let Some(p) = which(prog) {
             out.push(Found { kind, detail: p.display().to_string(), ready: true, models: vec![] });
         }
     }
@@ -71,9 +72,12 @@ pub async fn detect(net: &Net, ollama_base: Option<&str>) -> Vec<Found> {
     }
     for kind in [Kind::Anthropic, Kind::OpenAi, Kind::Gemini] {
         let env = kind.key_env().unwrap_or_default();
-        let has = std::env::var(env).map(|v| !v.is_empty()).unwrap_or(false);
+        let has = local && std::env::var(env).map(|v| !v.is_empty()).unwrap_or(false);
         let detail = if has { format!("key found in {env}") } else { "needs an API key".to_string() };
         out.push(Found { kind, detail, ready: has, models: vec![] });
+    }
+    if !local {
+        return out;
     }
     out.push(Found {
         kind: Kind::Command, detail: "for llm, aichat, a script…".into(), ready: false, models: vec![]
