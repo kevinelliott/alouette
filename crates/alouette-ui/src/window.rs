@@ -85,6 +85,8 @@ pub struct Cx<'a> {
     pub net: &'a alouette_net::Net,
     pub store: Option<&'a Store>,
     pub secrets_backend: &'a str,
+    /// Passwords and tokens: the system keychain where there is one.
+    pub secrets: &'a std::sync::Arc<dyn alouette_store::secrets::SecretStore>,
     pub config_path: &'a std::path::Path,
     pub effects: Vec<Effect>,
 }

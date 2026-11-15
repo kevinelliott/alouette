@@ -281,7 +281,7 @@ async fn session(s: TcpStream, srv: Server) -> std::io::Result<()> {
                                     parts.push("INTERNALDATE \"17-Jul-2024 02:44:25 +0000\"".into());
                                 }
                                 let mut lit = None;
-                                if items.contains("BODY.PEEK[HEADER]") || items.contains("BODY[HEADER]") {
+                                if items.contains("BODY.PEEK[HEADER") || items.contains("BODY[HEADER") {
                                     let end = m
                                         .raw
                                         .windows(4)

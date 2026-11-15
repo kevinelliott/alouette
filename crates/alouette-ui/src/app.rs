@@ -63,7 +63,7 @@ pub struct App {
     router: Router,
     modules: Vec<Box<dyn Module>>,
     store: Option<Store>,
-    secrets: Box<dyn SecretStore>,
+    secrets: std::sync::Arc<dyn SecretStore>,
     events: EventSender,
     splash: Option<Splash>,
     pending: Vec<KeyChord>,
@@ -119,7 +119,7 @@ impl App {
             router,
             modules: opts.modules,
             store: opts.store,
-            secrets: opts.secrets,
+            secrets: std::sync::Arc::from(opts.secrets),
             events: tx,
             splash,
             pending: vec![],
@@ -280,6 +280,7 @@ impl App {
                 net,
                 store: store.as_ref(),
                 secrets_backend: secrets.backend(),
+                secrets,
                 config_path,
                 effects: vec![],
             };
@@ -344,6 +345,7 @@ impl App {
                 net,
                 store: store.as_ref(),
                 secrets_backend: secrets.backend(),
+                secrets,
                 config_path,
                 effects: vec![],
             };

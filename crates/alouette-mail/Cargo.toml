@@ -1,0 +1,31 @@
+[package]
+name = "alouette-mail"
+description = "Mail accounts for Alouette: IMAP and SMTP, JMAP, and Gmail and Microsoft 365 sign-in"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-net.workspace = true
+proto-imap.workspace = true
+proto-smtp.workspace = true
+base64 = "0.22"
+mail-builder = "0.4"
+mail-parser = "0.11"
+serde = { workspace = true }
+serde_json.workspace = true
+time = { workspace = true, features = ["parsing"] }
+tokio = { workspace = true, features = ["io-util", "net", "sync", "time"] }
+url.workspace = true
+aws-lc-rs = "1"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros", "rt"] }
+proto-imap = { workspace = true, features = ["test-server"] }
+proto-smtp = { workspace = true, features = ["test-server"] }
+alouette-net.workspace = true
+alouette-core.workspace = true

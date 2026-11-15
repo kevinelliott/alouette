@@ -36,6 +36,7 @@ proto-ftp = { path = "crates/proto-ftp", version = "0.1.0" }
 proto-imap = { path = "crates/proto-imap", version = "0.1.0" }
 proto-smtp = { path = "crates/proto-smtp", version = "0.1.0" }
 alouette-vfs = { path = "crates/alouette-vfs", version = "0.1.0" }
+alouette-mail = { path = "crates/alouette-mail", version = "0.1.0" }
 alouette-ssh = { path = "crates/alouette-ssh", version = "0.1.0" }
 mod-terminal = { path = "crates/mod-terminal", version = "0.1.0" }
 mod-files = { path = "crates/mod-files", version = "0.1.0" }

@@ -88,6 +88,19 @@ parallel_transfers = 3
 # endpoint = "https://s3.us-east-1.amazonaws.com"
 # region = "us-east-1"
 
+[mail]
+offline_cache = false         # keep messages on disk for offline reading (off: mail stays on the server)
+remote_images = false         # load images from the web in HTML mail
+poll_secs = 300               # how often to check when the server cannot push new mail
+# [[mail.accounts]]
+# name = "home"
+# email = "me@example.org"
+# kind = "imap"               # imap, jmap, gmail or m365
+# imap = "imap.example.org:993"
+# smtp = "smtp.example.org:465"
+# For gmail and m365, register your own OAuth app and set client_id (and client_secret for
+# Google). The server names are filled in for you.
+
 [keys]
 # Override any key binding. Examples:
 # palette = "ctrl+p"

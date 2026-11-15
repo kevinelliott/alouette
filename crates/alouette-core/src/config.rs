@@ -351,6 +351,66 @@ pub struct Site {
     pub region: Option<String>,
 }
 
+/// The Mail module.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Mail {
+    /// Keep copies of messages on disk for reading offline. Off: mail stays on the server.
+    pub offline_cache: bool,
+    /// Load remote images in HTML mail. Off, so senders cannot tell when you read.
+    pub remote_images: bool,
+    /// Check for new mail this often when the server cannot push (IDLE), in seconds.
+    pub poll_secs: u64,
+    pub accounts: Vec<MailAccount>,
+}
+
+impl Default for Mail {
+    fn default() -> Self {
+        Self { offline_cache: false, remote_images: false, poll_secs: 300, accounts: vec![] }
+    }
+}
+
+/// How an account connects.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum MailKind {
+    /// IMAP for reading and SMTP for sending, with a password.
+    #[default]
+    Imap,
+    /// JMAP (Fastmail, Stalwart, Cyrus).
+    Jmap,
+    /// Gmail over IMAP and SMTP, signed in with Google (OAuth).
+    Gmail,
+    /// Outlook.com and Microsoft 365 over IMAP and SMTP, signed in with Microsoft (OAuth).
+    M365,
+}
+
+/// One mail account. Passwords and tokens live in the secret store, not here.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct MailAccount {
+    /// What to call it, such as "work".
+    pub name: String,
+    /// Your address, used as the sender.
+    pub email: String,
+    /// Your name as recipients see it.
+    pub display_name: Option<String>,
+    pub kind: MailKind,
+    /// The login, if not the address.
+    pub user: Option<String>,
+    /// IMAP server `host[:port]`. Port 993 means TLS from the start; 143 means STARTTLS.
+    pub imap: Option<String>,
+    /// SMTP server `host[:port]`. Port 465 means TLS from the start; 587 means STARTTLS.
+    pub smtp: Option<String>,
+    /// JMAP session URL, or just the host (`/.well-known/jmap` is tried).
+    pub jmap: Option<String>,
+    /// For Gmail and Microsoft 365: your own OAuth app's client ID (and secret, for Google).
+    pub client_id: Option<String>,
+    pub client_secret: Option<String>,
+    /// Appended to messages you write.
+    pub signature: Option<String>,
+}
+
 /// The whole configuration file.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[serde(default, deny_unknown_fields)]
@@ -363,6 +423,7 @@ pub struct Config {
     pub terminal: Terminal,
     pub ssh: Ssh,
     pub files: Files,
+    pub mail: Mail,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,
