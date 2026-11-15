@@ -1,0 +1,53 @@
+[package]
+name = "alouette"
+description = "A modern, single-binary internet suite for the terminal, in the spirit of Minuet"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "../../README.md"
+keywords = ["tui", "gopher", "gemini", "email", "terminal"]
+categories = ["command-line-utilities", "network-programming"]
+
+[[bin]]
+name = "alouette"
+path = "src/main.rs"
+
+[dependencies]
+alouette-core.workspace = true
+alouette-store.workspace = true
+alouette-ui.workspace = true
+alouette-nostalgia.workspace = true
+alouette-net.workspace = true
+mod-demo.workspace = true
+mod-burrow.workspace = true
+mod-inquire.workspace = true
+mod-nettools.workspace = true
+mod-terminal.workspace = true
+mod-files.workspace = true
+mod-mail.workspace = true
+mod-news.workspace = true
+mod-social.workspace = true
+mod-web.workspace = true
+mod-contacts.workspace = true
+mod-calendar.workspace = true
+mod-chat.workspace = true
+mod-assistant.workspace = true
+alouette-serve.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+time.workspace = true
+tokio = { workspace = true, features = ["signal"] }
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+rcgen = { version = "0.14", default-features = false, features = ["aws_lc_rs", "pem"] }
+rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs", "std"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["aws_lc_rs"] }

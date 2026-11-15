@@ -1,0 +1,28 @@
+[package]
+name = "alouette-vfs"
+description = "One file API over local disks, SFTP, FTP/FTPS, WebDAV and S3, for Alouette's Files module"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-net.workspace = true
+alouette-ssh.workspace = true
+proto-ftp.workspace = true
+aws-lc-rs = "1"
+quick-xml = "0.41"
+russh-sftp = "3"
+time = { workspace = true, features = ["parsing"] }
+tokio = { workspace = true, features = ["io-util", "fs"] }
+url.workspace = true
+base64 = "0.22"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "net"] }
+alouette-core.workspace = true
+alouette-ssh = { workspace = true, features = ["test-server"] }
+base64 = "0.22"
+time = { workspace = true, features = ["formatting"] }

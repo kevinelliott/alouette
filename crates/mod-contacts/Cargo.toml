@@ -1,0 +1,23 @@
+[package]
+name = "mod-contacts"
+description = "Alouette's Contacts module: an address book with CardDAV sync, LDAP lookup and links to mail, the fediverse and SSH"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-net.workspace = true
+alouette-pim.workspace = true
+alouette-store.workspace = true
+alouette-ui.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+tokio = { workspace = true, features = ["fs"] }
+url.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros", "rt"] }

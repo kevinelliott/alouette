@@ -1,0 +1,221 @@
+# Alouette configuration.
+#
+# Every setting below shows its default. Delete anything you don't change.
+# Alouette reloads this file as soon as you save it.
+
+[general]
+# How windows are arranged: "desktop" (Minuet style), "tiled" or "tabs".
+layout = "desktop"
+# Built-in themes: minuet, turbo, amber, green, modern-dark, modern-light,
+# high-contrast, mono. Your own themes go in the "themes" folder next to this file.
+theme = "minuet"
+# Key binding preset: "cua" (F-keys and Alt menus, like Minuet), "vim" or "emacs".
+keymap = "cua"
+# Window borders: "theme", "rounded", "plain", "double", "thick" or "ascii".
+border = "theme"
+# Capture the mouse. Turn off to let your terminal handle text selection.
+mouse = true
+# Windows to open at startup, as URLs.
+startup = ["about:welcome"]
+# Show a clock in the status line.
+clock = true
+
+[nostalgia]
+# Turn this off to switch off every retro touch at once.
+enabled = true
+splash = true
+splash_ms = 1500
+# Call modules by Minuet's names: POPmail, NetNews, Gopher, Telnet.
+minuet_names = false
+shadows = true
+desktop_pattern = true
+# Modem handshake and new-mail chime. Never played over SSH unless you ask.
+sounds = false
+# Retro commands such as "archie", "veronica" and "minuet".
+easter_eggs = true
+
+[cache]
+# Keep mail and news on disk for offline reading and search. Off by default.
+enabled = false
+max_mb = 2048
+max_age_days = 365
+
+[ai]
+# Nothing is sent to any AI provider until you turn this on and pick a provider.
+# Press F2 (Assistant) to choose one: a CLI such as claude, a local Ollama, or an API key.
+enabled = false
+# Show what will be sent and wait for a yes before each request.
+preview = true
+# Replace emails, phone numbers, IPs, card numbers and keys with placeholders first.
+redact = true
+# Modules whose content may go out without asking, such as ["news", "web"].
+allow = []
+# Stop once this month's estimated cost reaches this many dollars (0 = no limit).
+monthly_budget = 0.0
+
+[network]
+prefer_ipv6 = true
+# "system", "doh" (DNS over HTTPS), "dot" (over TLS) or "doq" (over QUIC).
+dns = "system"
+# For encrypted DNS: "cloudflare", "quad9", "google", or "IP#name".
+# dns_server = "quad9"
+# Default proxy: "socks5://host:port", "socks5h://host:port" or "http://host:port".
+# proxy = "socks5h://127.0.0.1:9050"
+connect_timeout_secs = 15
+# Lowest TLS version to accept: "1.2" or "1.3". Post-quantum key exchange
+# (X25519MLKEM768) is always offered first.
+tls_min = "1.2"
+http3 = true                  # HTTP/3 over QUIC when a site offers it (direct connections only)
+ech = true                    # Encrypted Client Hello when a site's DNS offers it; best with dns = "doh"
+
+# Routing rules are checked in order. For example, send .onion names through Tor:
+# [[network.routes]]
+# hosts = ["*.onion"]
+# via = "socks5h://127.0.0.1:9050"
+
+[terminal]
+# shell = "/bin/zsh"          # unset uses $SHELL, or %COMSPEC% on Windows
+scrollback = 10000
+term = "xterm-256color"
+
+[ssh]
+import_config = true          # read hosts from ~/.ssh/config
+agent = true                  # try keys held by ssh-agent first
+keepalive_secs = 30
+# [[ssh.hosts]]
+# name = "web"
+# host = "web.example.org"
+# user = "deploy"
+# jump = "bastion.example.org"
+# forward = ["8080:localhost:80"]
+
+[files]
+readme_viewer = true          # show a folder's README when you open it, as Minuet did
+show_hidden = false
+parallel_transfers = 3
+# [[files.sites]]
+# name = "backups"
+# url = "s3://my-bucket/backups"
+# endpoint = "https://s3.us-east-1.amazonaws.com"
+# region = "us-east-1"
+
+[mail]
+offline_cache = false         # keep messages on disk for offline reading (off: mail stays on the server)
+remote_images = false         # load images from the web in HTML mail
+poll_secs = 300               # how often to check when the server cannot push new mail
+# [[mail.accounts]]
+# name = "home"
+# email = "me@example.org"
+# kind = "imap"               # imap, jmap, gmail or m365
+# imap = "imap.example.org:993"
+# smtp = "smtp.example.org:465"
+# For gmail and m365, register your own OAuth app and set client_id (and client_secret for
+# Google). The server names are filled in for you.
+
+[news]
+max_articles = 500            # the most articles to fetch from one group at a time
+# name = "Your Name"          # shown on articles you post
+# email = "you@example.org"
+# [[news.servers]]
+# name = "eternal"
+# host = "news.eternal-september.org:563"
+# user = "you"
+# groups = ["comp.lang.rust", "alt.folklore.computers"]
+
+[feeds]
+refresh_mins = 60             # fetch feeds this often while the Feeds window is open
+# [[feeds.subscriptions]]
+# url = "https://blog.rust-lang.org/feed.xml"
+# folder = "Rust"
+
+[inquire]
+wikipedia = "en"              # Wikipedia edition to search; "" leaves it out
+searxng = ""                  # a SearXNG instance that allows format=json
+sru = "http://lx2.loc.gov:210/LCDB"  # a library catalogue over SRU (Library of Congress)
+scholarly = true              # ask arXiv and Crossref about words
+# [[inquire.opensearch]]
+# name = "Marginalia"
+# url = "https://search.marginalia.nu/search?query={searchTerms}&format=rss"
+
+[web]
+home = ""                     # the page web: opens; empty shows the start page
+search = "https://html.duckduckgo.com/html/?q={}"  # where words typed as an address go
+reader = false                # open pages in reader mode (R switches, and is remembered per site)
+external_browser = ""         # command for "open in your browser"; empty uses the system's
+keep_cookies = false          # keep cookies between runs
+
+[social]
+poll_secs = 60                # check for new posts this often while the Social window is open
+fold_content_warnings = true  # keep posts with a content warning folded until opened
+# [[social.accounts]]         # added for you when you sign in from social:
+# name = "home"
+# instance = "mastodon.social"
+
+[contacts]
+sync_mins = 15                # sync CardDAV books this often while Contacts is open
+# [[contacts.books]]          # a CardDAV address book; the password is asked for once
+# name = "cloud"
+# url = "https://cloud.example.com/remote.php/dav"
+# user = "me"
+# [[contacts.directories]]    # an LDAP directory to search
+# name = "work"
+# url = "ldaps://ldap.example.com/dc=example,dc=com"
+# bind_dn = ""                # empty searches anonymously
+
+[calendar]
+week_start = "monday"         # or "sunday"
+reminders = true              # show reminders while Alouette runs
+default_alarm_mins = 10       # the reminder new events get; 0 for none
+sync_mins = 15                # sync CalDAV and refresh subscriptions this often
+view = "agenda"               # what calendar: opens: agenda, week or month
+# [[calendar.accounts]]       # a CalDAV calendar
+# name = "work"
+# url = "https://cloud.example.com/remote.php/dav"
+# user = "me"
+# [[calendar.subscriptions]]  # a calendar followed by address
+# name = "holidays"
+# url = "webcal://example.com/holidays.ics"
+
+[chat]
+nick = ""                     # your IRC nick; empty means your login name
+realname = "Alouette user"
+logs = false                  # keep plain-text logs of chat buffers in the data folder
+notify = "highlights"         # toasts for mentions and private messages; "all" or "off"
+highlights = []               # words besides your nick that count as a mention
+show_joins = true             # show joins, parts and quits
+scrollback = 2000             # lines kept per buffer
+# [[chat.irc]]                # an IRC network; open irc://host/#channel to add one
+# name = "Libera"
+# host = "irc.libera.chat"    # port 6697 with TLS unless you give another
+# sasl = "plain"              # "plain" asks for your services password once; "external" uses cert
+# cert = "~/.config/alouette/libera.pem"
+# channels = ["#alouette"]
+# autoconnect = true
+# [[chat.matrix]]             # a Matrix account; type /matrix @you:server in Chat to add one
+# name = "matrix.org"
+# homeserver = "matrix.org"
+# user = "@me:matrix.org"
+# autoconnect = true
+
+[keys]
+# Override any key binding. Examples:
+# palette = "ctrl+p"
+# quit = ["alt+x", "ctrl+q"]
+
+[serve]
+# `alouette serve` runs Alouette for several people over SSH. Each user signs in with a key
+# (alouette serve add-user NAME --github LOGIN) and gets their own settings and data.
+listen = "127.0.0.1:2222"
+admins = []                   # users who get the admin console, serve:
+guest = false                 # let anyone in as "guest" with a fresh profile
+deny = ["terminal", "files"]  # these would reach out with the server's own SSH identity
+guest_modules = ["burrow", "inquire", "nettools", "web", "feeds", "news"]
+max_sessions = 32
+sessions_per_user = 3
+max_guests = 8
+max_windows = 16
+guest_max_windows = 4
+idle_minutes = 60             # 0 means never
+guest_minutes = 30
+quota_mb = 500
+allow_private = false         # let users reach this server's localhost and private networks

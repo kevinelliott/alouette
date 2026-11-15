@@ -1,0 +1,26 @@
+[package]
+name = "mod-nettools"
+description = "NetTools: ping, traceroute, DNS, WHOIS, RDAP, port checks, TLS inspection and mDNS discovery"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+alouette-core.workspace = true
+alouette-lookup.workspace = true
+alouette-net.workspace = true
+alouette-ui.workspace = true
+crossterm.workspace = true
+futures.workspace = true
+mdns-sd.workspace = true
+mod-inquire.workspace = true
+ratatui.workspace = true
+tokio = { workspace = true, features = ["process", "io-util", "time", "net"] }
+url.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+surge-ping.workspace = true

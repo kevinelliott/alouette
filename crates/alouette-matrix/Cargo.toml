@@ -1,0 +1,33 @@
+[package]
+name = "alouette-matrix"
+description = "Alouette's Matrix client: rooms, end-to-end encryption and device verification"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+matrix-sdk = { version = "0.19", default-features = false, features = ["e2e-encryption", "automatic-room-key-forwarding", "sqlite", "rustls-aws-lc-rs"] }
+rusqlite.workspace = true
+serde = { workspace = true }
+serde_json.workspace = true
+alouette-core.workspace = true
+tokio = { workspace = true, features = ["sync", "time", "rt", "net"] }
+tracing.workspace = true
+url.workspace = true
+futures.workspace = true
+getrandom = "0.3"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "net", "io-util", "time"] }
+alouette-matrix = { path = ".", features = ["test-server"] }
+
+[features]
+# A tiny homeserver for tests in this and other crates.
+test-server = ["tokio/net", "tokio/io-util"]
+
+[[example]]
+name = "fake_matrix"
+required-features = ["test-server"]

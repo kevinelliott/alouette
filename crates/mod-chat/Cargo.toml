@@ -1,0 +1,27 @@
+[package]
+name = "mod-chat"
+description = "Alouette's Chat module: IRC and Matrix side by side"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-ui.workspace = true
+alouette-net.workspace = true
+alouette-store.workspace = true
+alouette-matrix.workspace = true
+proto-irc.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+time = { workspace = true, features = ["macros", "formatting", "local-offset"] }
+tokio = { workspace = true, features = ["sync", "time", "rt"] }
+url.workspace = true
+unicode-width.workspace = true
+
+[dev-dependencies]
+proto-irc = { workspace = true, features = ["test-server"] }
+tokio = { workspace = true, features = ["test-util", "macros", "rt", "rt-multi-thread", "net", "io-util", "time"] }

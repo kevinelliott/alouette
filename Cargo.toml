@@ -1,0 +1,114 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+exclude = ["fuzz", "third_party"]
+default-members = ["crates/alouette"]
+
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96"
+license = "MIT"
+repository = "https://github.com/kevinelliott/alouette"
+authors = ["Kevin Elliott and Alouette contributors"]
+
+[workspace.dependencies]
+alouette-core = { path = "crates/alouette-core", version = "0.1.0" }
+alouette-store = { path = "crates/alouette-store", version = "0.1.0" }
+alouette-ui = { path = "crates/alouette-ui", version = "0.1.0" }
+alouette-net = { path = "crates/alouette-net", version = "0.1.0" }
+alouette-nostalgia = { path = "crates/alouette-nostalgia", version = "0.1.0" }
+mod-demo = { path = "crates/mod-demo", version = "0.1.0" }
+mod-burrow = { path = "crates/mod-burrow", version = "0.1.0" }
+proto-gopher = { path = "crates/proto-gopher", version = "0.1.0" }
+proto-gemini = { path = "crates/proto-gemini", version = "0.1.0" }
+proto-finger = { path = "crates/proto-finger", version = "0.1.0" }
+proto-whois = { path = "crates/proto-whois", version = "0.1.0" }
+proto-dict = { path = "crates/proto-dict", version = "0.1.0" }
+alouette-lookup = { path = "crates/alouette-lookup", version = "0.1.0" }
+mod-nettools = { path = "crates/mod-nettools", version = "0.1.0" }
+mod-inquire = { path = "crates/mod-inquire", version = "0.1.0" }
+alouette-term = { path = "crates/alouette-term", version = "0.1.0" }
+proto-telnet = { path = "crates/proto-telnet", version = "0.1.0" }
+proto-ftp = { path = "crates/proto-ftp", version = "0.1.0" }
+proto-imap = { path = "crates/proto-imap", version = "0.1.0" }
+alouette-feeds = { path = "crates/alouette-feeds", version = "0.1.0" }
+alouette-html = { path = "crates/alouette-html", version = "0.1.0" }
+alouette-pim = { path = "crates/alouette-pim", version = "0.1.0" }
+mod-contacts = { path = "crates/mod-contacts", version = "0.1.0" }
+mod-calendar = { path = "crates/mod-calendar", version = "0.1.0" }
+proto-irc = { path = "crates/proto-irc", version = "0.1.0" }
+alouette-matrix = { path = "crates/alouette-matrix", version = "0.1.0" }
+mod-chat = { path = "crates/mod-chat", version = "0.1.0" }
+alouette-ai = { path = "crates/alouette-ai", version = "0.1.0" }
+mod-assistant = { path = "crates/mod-assistant", version = "0.1.0" }
+alouette-serve = { path = "crates/alouette-serve", version = "0.1.0" }
+
+proto-nntp = { path = "crates/proto-nntp", version = "0.1.0" }
+proto-smtp = { path = "crates/proto-smtp", version = "0.1.0" }
+alouette-vfs = { path = "crates/alouette-vfs", version = "0.1.0" }
+alouette-mail = { path = "crates/alouette-mail", version = "0.1.0" }
+alouette-ssh = { path = "crates/alouette-ssh", version = "0.1.0" }
+mod-terminal = { path = "crates/mod-terminal", version = "0.1.0" }
+mod-files = { path = "crates/mod-files", version = "0.1.0" }
+mod-news = { path = "crates/mod-news", version = "0.1.0" }
+mod-social = { path = "crates/mod-social", version = "0.1.0" }
+mod-web = { path = "crates/mod-web", version = "0.1.0" }
+mod-mail = { path = "crates/mod-mail", version = "0.1.0" }
+serde_json = "1"
+x509-parser = "0.18"
+surge-ping = "0.9"
+mdns-sd = "0.21"
+
+anyhow = "1"
+clap = { version = "4.6", features = ["derive", "env"] }
+crossterm = { version = "0.29", features = ["event-stream"] }
+directories = "6"
+futures = "0.3"
+insta = "1.49"
+nucleo-matcher = "0.3"
+notify = "8"
+ratatui = { version = "0.30", features = ["unstable-rendered-line-info"] }
+rusqlite = { version = "0.42", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+time = { version = "0.3", features = ["formatting", "local-offset", "macros"] }
+tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "sync", "time"] }
+tokio-util = "0.7"
+toml = "1"
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+unicode-width = "0.2"
+url = "2.5"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.dist]
+inherits = "release"
+lto = "fat"
+# Size over speed: a TUI spends its time waiting on the network and the person.
+opt-level = "s"
+
+# For servers (the container image): unwinding costs about 7 MB, and lets a fault in one
+# `alouette serve` session close that session only instead of the whole server.
+[profile.serve]
+inherits = "dist"
+panic = "unwind"
+
+# Smaller debug builds: line tables for our code, no debug info for dependencies.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
+# matrix-sdk-sqlite 0.19 pins rusqlite 0.40, whose bundled SQLite has RUSTSEC-2026-0459.
+# This copy differs only in asking for rusqlite 0.42; drop it when upstream catches up.
+[patch.crates-io]
+matrix-sdk-sqlite = { path = "third_party/matrix-sdk-sqlite" }

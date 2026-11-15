@@ -1,0 +1,21 @@
+[package]
+name = "mod-inquire"
+description = "Inquire: Alouette's one-box search and lookup across the old and new internet"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+alouette-core.workspace = true
+alouette-lookup.workspace = true
+alouette-net.workspace = true
+alouette-ui.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+tokio.workspace = true
+unicode-width.workspace = true
+url.workspace = true

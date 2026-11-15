@@ -1,0 +1,19 @@
+[package]
+name = "mod-assistant"
+description = "The Assistant window: summarize, draft, triage and explain with the AI provider you choose"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+alouette-ai.workspace = true
+alouette-core.workspace = true
+alouette-ui.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+tokio = { workspace = true, features = ["rt"] }
+url.workspace = true

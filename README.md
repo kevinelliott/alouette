@@ -7,13 +7,18 @@ news and feeds, Gopher and Gemini, search and lookups, file transfer, SSH and Te
 network tools, contacts, a calendar, chat, the fediverse and an optional AI assistant, all in one
 window manager.
 
-> **Status: milestone M3 (Mail).** The shell, the network layer and six modules
+> **Status: milestone M9 (`alouette serve`).** The shell, the network layer and fourteen modules
 > work today: **Burrow** (Gopher, Gemini, Finger), **Inquire** (one box that asks DNS, RDAP, WHOIS,
 > BGP, certificate logs, WebFinger, OpenPGP WKD, DICT, Veronica-2 and Gemini search at once),
 > **NetTools** (ping, traceroute, DNS, ports, TLS inspection, mDNS), **Terminal** (local shells,
-> SSH, Telnet, Mosh), **Files** (two panes over local disks, SFTP, FTP/FTPS, WebDAV and S3) and
-> **Mail** (IMAP and SMTP, JMAP, Gmail and Microsoft 365). News and the rest arrive milestone by
-> milestone; see the plan below.
+> SSH, Telnet, Mosh), **Files** (two panes over local disks, SFTP, FTP/FTPS, WebDAV and S3),
+> **Mail** (IMAP and SMTP, JMAP, Gmail and Microsoft 365), **News** (Usenet over NNTP),
+> **Feeds** (RSS, Atom and JSON Feed), **Social** (Mastodon and compatible servers), **Web**
+> (a text browser with reader mode), **Contacts** (CardDAV and LDAP), **Calendar** (CalDAV,
+> ICS subscriptions and invitations), **Chat** (IRC and end-to-end encrypted Matrix) and the
+> **Assistant** (opt-in AI through a local CLI, Ollama or an API key). `alouette serve` shares
+> one machine's Alouette with several people over SSH. Polish and 1.0 come next; see the plan
+> below.
 
 ## Try it
 
@@ -31,11 +36,47 @@ downloads and watch them in the Tasks window, where you can cancel and retry the
 | Module | Try | Does |
 | --- | --- | --- |
 | Burrow | `gopher://gopher.floodgap.com/`, `gemini://geminiprotocol.net/`, `finger://graph.no/oslo` | Gopher (and `gophers://`), Gemini and Finger in one browser. Searches, Gemini input, redirects, back and forward, bookmarks, downloads through Tasks, and trust-on-first-use certificate pins that warn when a certificate changes. |
-| Inquire | `inquire:umn.edu`, `inquire:AS13335`, `inquire:@user@host`, `inquire:minuet` | Works out what you typed and asks every source that applies at once. Results stream in as they arrive. Anything typed into the command palette can be sent to Inquire. |
+| Inquire | `inquire:umn.edu`, `inquire:AS13335`, `inquire:@user@host`, `inquire:minuet` | Works out what you typed and asks every source that applies at once: DNS, RDAP, WHOIS, certificate logs, the Wayback Machine, Wikipedia, arXiv, Crossref, library catalogues over SRU, SearXNG, OpenSearch, DICT, Veronica-2 and Gemini search. Results stream in as they arrive. Anything typed into the command palette can be sent to Inquire. |
 | NetTools | `net:ping/example.org`, `net:dns/MX/umn.edu`, `net:tls/example.org` | A small command line: `ping`, `trace`, `dns`, `whois`, `rdap`, `asn`, `ports`, `tls` and `mdns`. |
 | Terminal | `term:`, `ssh:`, `ssh://me@host`, `telnet://telehack.com` | A VT220/xterm terminal for local shells, SSH, Telnet and Mosh. SSH reads `~/.ssh/config`, uses your agent and keys, checks `known_hosts`, hops through `ProxyJump` hosts and forwards ports, with post-quantum key exchange first. Ctrl+] then a key gives that key to Alouette. |
 | Files | `files:`, `sftp://me@host/`, `ftp://ftp.gnu.org/gnu/`, `davs://host/dav/`, `s3://bucket/` | Two panes, each on a local folder or a server. Copy whole folders either way in the background, make folders, rename and delete. A folder's README is shown as you arrive. FTPS (explicit and implicit), WebDAV (Nextcloud and friends) and S3 (AWS, MinIO, R2) with SigV4. |
 | Mail | `mail:`, `mail:setup`, `mailto:someone@example.org` | Folders, a message list and a reader in one window, and a separate window for writing. Reply, reply all, forward, star, archive, move, delete to Trash and filter. New mail arrives through IMAP IDLE. IMAP and SMTP with passwords, JMAP (Fastmail, Stalwart), and Gmail and Microsoft 365 signed in with OAuth using your own app's client ID. Passwords and tokens go to the system keychain. An offline copy is off unless you turn on `mail.offline_cache`. |
+| News | `news:`, `nntps://news.example.org/comp.lang.rust` | Usenet the way Minuet read it, with threads. Lists every group on the server to pick from, keeps track of what you have read, pages with Space through unread articles, posts and follows up, and replies by mail. NNTPS or STARTTLS, and AUTHINFO sign-in with the password in your keychain. |
+| Feeds | `feeds:`, `feed:https://blog.rust-lang.org/feed.xml` | RSS, Atom and JSON Feed, with podcast enclosures. Type a site's address and Alouette finds its feed. Refreshes in the background and remembers what you have read. |
+| Social | `social:`, `social:@you@mastodon.social` | Mastodon and servers that speak its API (GoToSocial, Pleroma, Akkoma). Home, notifications, local and federated timelines; threads, posting with content warnings and visibility, favourites and boosts. Signs in with a pasted token or through your browser. |
+| Contacts | `contacts:`, `contacts:Ada` | An address book kept as vCard files and synced with CardDAV (Nextcloud, iCloud, Fastmail, Radicale). Each card links to mail, the fediverse, SSH hosts and chat; LDAP directories can be searched and their people saved. Mail shows when a sender is in your contacts, and + adds one. |
+| Calendar | `calendar:`, `calendar:month`, `webcal://host/cal.ics` | Agenda, week and month views over local, CalDAV and followed ICS calendars, with repeating events, time zones and reminders. Invitations in mail are answered with Y, N or T: the event lands in your calendar and the organiser gets your answer. |
+| Chat | `chat:`, `ircs://irc.libera.chat/#alouette`, `matrix:r/room:matrix.org` | IRC networks and Matrix accounts side by side in one window, with a buffer list, nick list, completion and input history. IRC speaks IRCv3 (SASL PLAIN and EXTERNAL with a client certificate, server time, echo, chathistory) and reconnects by itself. Matrix rooms are end-to-end encrypted, with emoji verification of sessions and key backup recovery. Mentions raise notifications; logs are kept only if you turn them on. |
+| Assistant | F2 in any window, `ai:` | Off until you pick a provider: the claude, codex or gemini CLI, a local Ollama, any command, or the Anthropic, OpenAI-compatible or Gemini API. Summarizes, drafts replies, triages mailboxes, explains terminal output and answers questions, including over your cached mail. Shows exactly what will be sent with personal details redacted, asks per module, and keeps a monthly cost meter and budget. |
+| Web | `web:`, `https://en.wikipedia.org/` | A text web browser over HTTP/2 and HTTP/1.1. Reader mode, link hints, forms, cookies, history, bookmarks, downloads and save as Markdown. Pages that need JavaScript open in your own browser with one key. HTML mail uses the same renderer. |
+
+## Alouette for a group: `alouette serve`
+
+One machine can run Alouette for several people, the way a campus host once offered Gopher and
+mail to anyone with a terminal. People sign in over SSH with their keys and each get their own
+settings, mail, bookmarks and saved passwords; nobody sees anyone else's.
+
+```sh
+alouette serve add-user ann --github ann-on-github   # or --key ann.pub
+alouette serve                                        # listens on 127.0.0.1:2222
+ssh -p 2222 ann@host
+```
+
+Or in a container, with everything kept in one volume:
+
+```sh
+docker build -t alouette .
+docker run -d --name alouette -p 2222:2222 -v alouette:/data alouette
+docker exec alouette alouette serve add-user ann --github ann-on-github
+```
+
+The `[serve]` settings choose who may come in (`guest = true` lets anyone in as `guest` with a
+fresh profile that is thrown away afterwards), which modules each may open, and the limits:
+sessions in all, sessions per user, guests, windows per session, idle and guest time, and a
+storage quota. Admins listed in `serve.admins` get `serve:`, a console of who is connected that
+can end a session. On a shared server Alouette never offers the server's own shell, files,
+programs, browser, API keys or private network to the people using it. See the manual for
+details.
 
 ## Three layouts, one set of windows
 
@@ -115,14 +156,14 @@ badge    IPv6 · TLS 1.3 · PQ
 | M4 | News (NNTP, RSS, Atom) and Social (Mastodon, Bluesky) |
 | M5 | Web reader |
 | M6 | Contacts (CardDAV, LDAP) and Calendar (CalDAV) |
-| M7 | Chat (IRC, Matrix, XMPP) |
+| M7 | Chat (IRC, Matrix; XMPP later) |
 | M8 | Assistant (opt-in AI: local CLIs, local network or cloud) |
 | M9 | `alouette serve`: Alouette over SSH |
 | M10 | Polish, accessibility, packaging, 1.0 |
 
 ## Building
 
-Rust 1.89 or newer. `cargo test --workspace` runs every test, including screen snapshots
+Rust 1.96 or newer. `cargo test --workspace` runs every test, including screen snapshots
 (`cargo insta review` updates them after an intended change).
 
 | Crate | Role |
@@ -135,7 +176,12 @@ Rust 1.89 or newer. `cargo test --workspace` runs every test, including screen s
 | `alouette-nostalgia` | Splash art, tips and Minuet history |
 | `alouette-lookup` | Lookups shared by Inquire and NetTools |
 | `proto-gopher`, `proto-gemini`, `proto-finger`, `proto-whois`, `proto-dict` | Protocol clients that work over any async stream |
-| `mod-burrow`, `mod-inquire`, `mod-nettools` | The modules |
+| `alouette-pim` | vCard, iCalendar with recurrence, iTIP, CardDAV and CalDAV sync, LDAP |
+| `proto-irc` | IRC messages with IRCv3 tags, capability negotiation, SASL, formatting and a client state machine |
+| `alouette-matrix` | Matrix through the Matrix Rust SDK: sync, end-to-end encryption, verification, recovery |
+| `alouette-serve` | `alouette serve`: the SSH server, terminal input over SSH, per-user folders and sealed secrets, limits and the admin console |
+| `alouette-ai` | AI providers (CLIs, Ollama, OpenAI-compatible, Anthropic, Gemini), redaction, cost meter, cache search |
+| `mod-burrow`, `mod-inquire`, `mod-nettools`, `mod-contacts`, `mod-calendar`, `mod-chat` and the other `mod-` crates | The modules |
 | `mod-demo` | A small example module |
 
 ## License

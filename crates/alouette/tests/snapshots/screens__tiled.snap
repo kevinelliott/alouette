@@ -1,0 +1,34 @@
+---
+source: crates/alouette/tests/screens.rs
+expression: "render_to_string(&mut app(LayoutKind::Tiled, KeymapPreset::Cua), 100, 30)"
+---
+  ≡  File  Window  Modules  Options  Help
+┌──────────────────── Welcome ───────────────────── 1 ┐┌───────────── Demo: links ────────────── 2 ┐
+│     _    _                  _   _                  ▲││Every link goes through the URL router, whi│
+│    / \  | | ___  _   _  ___| |_| |_ ___            █││                                           │
+│   / _ \ | |/ _ \| | | |/ _ \ __| __/ _ \           █││ about:welcome                      The wel│
+│  / ___ \| | (_) | |_| |  __/ |_| ||  __/           █││ about:tasks                        Backgro│
+│ /_/   \_\_|\___/ \__,_|\___|\__|\__\___|           █││ about:minuet                       A short│
+│                                                    █││ demo:jobs                          Start s│
+│ Your whole internet desk, in one terminal.         █││ gopher://gopher.floodgap.com/      Floodga│
+│                                                    █││ gemini://geminiprotocol.net/       Project│
+│ Alouette brings mail, news, Gopher and Gemini, file█││ finger://graph.no/oslo             The Osl│
+│ transfer, terminals, the web and more into one     █││                                           │
+│ terminal app, in the spirit of Minuet (1994).      █││                                           │
+│ Burrow (Gopher, Gemini and Finger), Inquire,       █││                                           │
+│ NetTools, Terminal, Files, Mail, News, Feeds,      ║│└───────────────────────────────────────────┘
+│ Social and Web are here now; the other modules     ║│╔════════ Demo: background jobs ═════════ 3 ╗
+│ follow milestone by milestone.                     ║│║Start a job. It runs in the background whil║
+│                                                    ║│║                                           ║
+│ Getting around                                     ║│║  d  Download    a 6 second fake download w║
+│   ^K            Command palette: every command,    ║│║  f  Failing job fails half way, so you can║
+│ window, theme and URL                              ║│║  l  Long job    runs until cancelled, with║
+│   F10           Menu bar (or Alt plus the red      ║│║  b  Burst       starts five short download║
+│ letter)                                            ║│║                                           ║
+│   F3            Open a URL, such as about:tasks or ║│║  t  opens the Tasks window to cancel (c) o║
+│ demo:jobs                                          ║│║                                           ║
+│   F6            Next window                        ║│║                                           ║
+│   Ctrl-F6       Switch layout: Desktop, Tiled, Tabs║│║                                           ║
+│   F5            Zoom the window                    ▼│║                                           ║
+└─────────────────────────────────────────────────────┘╚═══════════════════════════════════════════╝
+ F1 Help  F10 Menu  ^K Palette  d Download  f Fail  l Long  b Burst  t Tasks         tiled  │ 12:00

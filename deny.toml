@@ -1,0 +1,31 @@
+[graph]
+all-features = false
+
+[advisories]
+version = 2
+yanked = "deny"
+ignore = [
+  # rsa (through russh, for RSA SSH keys): a timing side channel on private-key operations.
+  # Alouette only signs SSH auth challenges locally; there is no fixed upstream release yet.
+  { id = "RUSTSEC-2023-0071", reason = "no fix available; local signing only" },
+  # anymap2 (through matrix-sdk) is unmaintained, not vulnerable; matrix-sdk has no release
+  # without it yet.
+  { id = "RUSTSEC-2026-0319", reason = "unmaintained only; waiting on matrix-sdk" },
+]
+
+[licenses]
+version = 2
+allow = [
+  "MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause",
+  "ISC", "Zlib", "Unicode-3.0", "MPL-2.0", "CC0-1.0", "BSL-1.0", "0BSD", "CDLA-Permissive-2.0",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

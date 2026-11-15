@@ -1,0 +1,30 @@
+[package]
+name = "alouette-ui"
+description = "The Alouette shell: window manager, layouts, menus, command palette, themes and keymaps"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-store.workspace = true
+alouette-nostalgia.workspace = true
+alouette-net.workspace = true
+anyhow.workspace = true
+crossterm.workspace = true
+futures.workspace = true
+nucleo-matcher.workspace = true
+ratatui.workspace = true
+serde.workspace = true
+time.workspace = true
+tokio.workspace = true
+toml.workspace = true
+tracing.workspace = true
+unicode-width.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+insta.workspace = true

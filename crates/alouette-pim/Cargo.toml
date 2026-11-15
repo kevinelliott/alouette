@@ -1,0 +1,22 @@
+[package]
+name = "alouette-pim"
+description = "Contacts and calendars for Alouette: vCard, iCalendar with recurrence, CardDAV, CalDAV, LDAP and iTIP"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-net.workspace = true
+alouette-vfs.workspace = true
+base64 = "0.22"
+jiff = "0.2"
+quick-xml = "0.41"
+tokio = { workspace = true, features = ["io-util", "fs", "net", "rt"] }
+url.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros", "rt", "net"] }
+alouette-core.workspace = true

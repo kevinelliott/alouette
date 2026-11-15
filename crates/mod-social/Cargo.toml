@@ -1,0 +1,27 @@
+[package]
+name = "mod-social"
+description = "Alouette's Social module: the fediverse (Mastodon and compatible servers)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-ui.workspace = true
+alouette-net.workspace = true
+alouette-store.workspace = true
+alouette-html.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+serde = { workspace = true }
+serde_json.workspace = true
+time = { workspace = true, features = ["parsing"] }
+tokio = { workspace = true, features = ["sync", "time", "net", "io-util", "rt"] }
+url.workspace = true
+unicode-width.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros", "rt", "net", "io-util", "time"] }

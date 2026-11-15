@@ -1,0 +1,22 @@
+[package]
+name = "mod-files"
+description = "Alouette's Files module: two panes over local disks, SFTP, FTP/FTPS, WebDAV and S3"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-ui.workspace = true
+alouette-net.workspace = true
+alouette-ssh.workspace = true
+alouette-vfs.workspace = true
+mod-terminal.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+time.workspace = true
+tokio = { workspace = true, features = ["io-util", "fs"] }
+url.workspace = true

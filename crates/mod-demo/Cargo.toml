@@ -1,0 +1,18 @@
+[package]
+name = "mod-demo"
+description = "A demonstration Alouette module: background jobs and links"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+alouette-core.workspace = true
+alouette-ui.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+tokio.workspace = true
+url.workspace = true
