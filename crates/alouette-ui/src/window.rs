@@ -73,6 +73,8 @@ pub struct DrawCx<'a> {
     pub tasks: &'a TaskManager,
     pub focused: bool,
     pub now: Instant,
+    /// The local time zone, read at startup.
+    pub local_offset: time::UtcOffset,
 }
 
 /// What a window can use while handling input or events.

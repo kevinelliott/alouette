@@ -980,7 +980,8 @@ impl App {
                 continue;
             }
             let number = self.wm.number(id).filter(|_| show_numbers);
-            let App { wm, theme, config, keymap, tasks, .. } = self;
+            let App { wm, theme, config, keymap, tasks, local_offset, .. } = self;
+            let local_offset = *local_offset;
             let Some(m) = wm.get_mut(id) else { continue };
             let is_focused = Some(id) == focused;
             if shadows && m.restore.is_none() {
@@ -996,7 +997,7 @@ impl App {
                 border: config.general.border,
             };
             let (inner, _) = chrome::window_frame(frame, rect, &spec, theme);
-            let dcx = DrawCx { theme, config, keymap, tasks, focused: is_focused, now };
+            let dcx = DrawCx { theme, config, keymap, tasks, focused: is_focused, now, local_offset };
             if inner.width > 0 && inner.height > 0 {
                 m.win.draw(frame, inner, &dcx);
             }

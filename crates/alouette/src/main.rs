@@ -117,6 +117,7 @@ fn modules(paths: &Paths) -> Vec<Box<dyn Module>> {
         Box::new(mod_nettools::NetToolsModule),
         Box::new(mod_terminal::TerminalModule),
         Box::new(mod_files::FilesModule),
+        Box::new(mod_mail::MailModule::new(paths.cache_dir.clone())),
         Box::new(mod_demo::DemoModule),
     ]
 }

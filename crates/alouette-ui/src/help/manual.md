@@ -40,6 +40,18 @@ Tab switches panes. Enter opens a folder or shows a file, Backspace goes up, Spa
 
 FTP passwords travel in the clear: use ftpes:// (TLS on port 21) or ftps:// (TLS on port 990) when the server offers it. S3 keys come from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or ~/.aws/credentials; set an endpoint and region on a saved site for MinIO, R2 and other stores.
 
+## Mail
+
+mail: opens your first account; mail:name opens another. With no accounts, mail:setup asks for one: pick IMAP, Gmail, Microsoft 365 or JMAP, type your address and the servers, and Alouette asks for your password when it first connects, then keeps it in your keychain. Accounts live under [[mail.accounts]] in alouette.toml.
+
+Tab moves between folders, messages and the open message. Enter opens a message and Space pages through it. c writes a new message, r replies, a replies to everyone, f forwards. s stars, u marks read or unread, e archives, m moves to a folder you name, d moves to Trash (and in Trash deletes for good after asking), / filters by subject or sender, g reloads. New mail shows up by itself where the server supports IMAP IDLE, and otherwise every mail.poll_secs seconds.
+
+In the writing window, Tab moves between the fields and the text, and Ctrl+B shows Cc and Bcc. Ctrl+S sends, Ctrl+D saves a draft, and Esc closes (asking first if you have written something). mailto: links open the writing window too.
+
+Gmail and Microsoft 365 sign in with OAuth, which needs an app of your own: create an OAuth client in Google Cloud (type Desktop app) or an app registration in Microsoft Entra (public client, with IMAP.AccessAsUser.All, SMTP.Send and offline_access), and put its client_id (and client_secret, for Google) on the account. Google opens your browser; Microsoft shows a code to type at microsoft.com/devicelogin.
+
+Mail is not saved on this computer unless you set mail.offline_cache = true, which keeps folder lists, message lists and the messages you open, so you can read them without a connection. Pictures in HTML mail are never fetched.
+
 ## Configuration
 
 Settings live in alouette.toml. Run "alouette config path" to find it. Alouette reloads the file as soon as you save it. The Settings window changes common options for you and saves the file.

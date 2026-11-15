@@ -28,6 +28,7 @@ mod-inquire.workspace = true
 mod-nettools.workspace = true
 mod-terminal.workspace = true
 mod-files.workspace = true
+mod-mail.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 crossterm.workspace = true
