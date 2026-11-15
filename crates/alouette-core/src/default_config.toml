@@ -56,6 +56,8 @@ connect_timeout_secs = 15
 # Lowest TLS version to accept: "1.2" or "1.3". Post-quantum key exchange
 # (X25519MLKEM768) is always offered first.
 tls_min = "1.2"
+http3 = true                  # HTTP/3 over QUIC when a site offers it (direct connections only)
+ech = true                    # Encrypted Client Hello when a site's DNS offers it; best with dns = "doh"
 
 # Routing rules are checked in order. For example, send .onion names through Tor:
 # [[network.routes]]

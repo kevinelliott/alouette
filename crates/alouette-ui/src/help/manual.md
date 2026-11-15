@@ -88,6 +88,10 @@ Cookies last until you quit. Mail written in HTML is shown through the same rend
 
 Settings live in alouette.toml. Run "alouette config path" to find it. Alouette reloads the file as soon as you save it. The Settings window changes common options for you and saves the file.
 
+## Network
+
+Every module connects through the same layer. It races IPv6 and IPv4 (Happy Eyeballs), offers the post-quantum X25519MLKEM768 key exchange first in TLS 1.3, and can resolve names over DNS over HTTPS, TLS or QUIC (network.dns). Proxies and per-host routes send traffic through SOCKS5 or HTTP proxies; route *.onion through Tor's SOCKS port to reach onion sites. Web pages use HTTP/3 over QUIC when a site offers it and the connection is direct (network.http3), and Encrypted Client Hello hides the site's name when its DNS HTTPS record publishes a key (network.ech), which is most useful with encrypted DNS. The status line badge shows what each window's connection uses, such as "IPv6 · TLS 1.3 · PQ · ECH · DoH HTTP/3".
+
 ## Themes
 
 Built-in themes: minuet, turbo, amber, green, modern-dark, modern-light, high-contrast and mono. Put your own theme files in the themes folder next to alouette.toml. A theme can inherit a built-in and override any color slot.

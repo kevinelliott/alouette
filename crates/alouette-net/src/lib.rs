@@ -7,6 +7,7 @@ pub mod dns;
 pub mod happy;
 pub mod http;
 pub mod proxy;
+pub mod quic;
 pub mod route;
 pub mod tls;
 pub mod web;
@@ -78,6 +79,9 @@ impl ConnInfo {
                 if t.post_quantum {
                     parts.push("PQ".into());
                 }
+                if t.ech {
+                    parts.push("ECH".into());
+                }
                 if !t.verified {
                     parts.push("TOFU".into());
                 }
@@ -110,11 +114,13 @@ pub struct TlsOptions {
     pub alpn: Vec<&'static [u8]>,
     /// Name to send in SNI and check the certificate against. Defaults to the host.
     pub server_name: Option<String>,
+    /// An ECHConfigList from the host's HTTPS record, to hide the name with ECH.
+    pub ech: Option<Vec<u8>>,
 }
 
 impl Default for TlsOptions {
     fn default() -> Self {
-        Self { verify: Verify::System, alpn: vec![], server_name: None }
+        Self { verify: Verify::System, alpn: vec![], server_name: None, ech: None }
     }
 }
 
@@ -131,6 +137,8 @@ struct Inner {
     timeout: Duration,
     tls13_only: bool,
     sessions: Arc<rustls::client::ClientSessionMemoryCache>,
+    http3: bool,
+    ech: bool,
 }
 
 impl Net {
@@ -150,8 +158,18 @@ impl Net {
                 timeout: Duration::from_secs(cfg.connect_timeout_secs.clamp(1, 600)),
                 tls13_only,
                 sessions: Arc::new(rustls::client::ClientSessionMemoryCache::new(256)),
+                http3: cfg.http3,
+                ech: cfg.ech,
             }),
         })
+    }
+
+    pub fn http3_enabled(&self) -> bool {
+        self.inner.http3
+    }
+
+    pub fn ech_enabled(&self) -> bool {
+        self.inner.ech
     }
 
     pub fn dns(&self) -> &Dns {
@@ -219,7 +237,7 @@ impl Net {
 
     /// Start TLS on an existing connection, as STARTTLS does.
     pub async fn handshake(&self, conn: Conn, opts: &TlsOptions) -> Result<TlsConn, NetError> {
-        let mut cfg = tls::client_config(opts.verify, self.inner.tls13_only, &opts.alpn)?;
+        let mut cfg = tls::client_config_ech(opts.verify, self.inner.tls13_only, &opts.alpn, opts.ech.as_deref())?;
         // Shared, so FTPS data connections can resume the control connection's session.
         cfg.resumption = rustls::client::Resumption::store(self.inner.sessions.clone());
         let name = opts.server_name.clone().unwrap_or_else(|| conn.info.host.clone());

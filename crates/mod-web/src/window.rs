@@ -920,6 +920,7 @@ impl Window for WebWindow {
     fn badge(&self) -> Option<String> {
         self.info.as_ref().map(|(i, proto)| {
             let p = match *proto {
+                "h3" => "HTTP/3",
                 "h2" => "HTTP/2",
                 _ => "HTTP/1.1",
             };

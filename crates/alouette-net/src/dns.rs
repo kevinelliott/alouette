@@ -76,6 +76,15 @@ impl Dns {
     }
 }
 
+/// What a host's HTTPS record offers (RFC 9460).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct HttpsInfo {
+    pub alpn: Vec<String>,
+    pub port: Option<u16>,
+    /// The ECHConfigList, for Encrypted Client Hello.
+    pub ech: Option<Vec<u8>>,
+}
+
 /// One answer from a record lookup.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Answer {
@@ -100,6 +109,39 @@ impl Dns {
                 .map(Arc::new)
                 .map_err(|e| NetError::Config(format!("reading the system DNS settings: {e}"))),
         }
+    }
+
+    /// The host's HTTPS record, if it has one in service mode.
+    pub async fn https_record(&self, host: &str) -> Option<HttpsInfo> {
+        use hickory_resolver::proto::rr::RData;
+        use hickory_resolver::proto::rr::RecordType;
+        use hickory_resolver::proto::rr::rdata::svcb::SvcParamValue;
+        if host.parse::<IpAddr>().is_ok() || host.starts_with('[') {
+            return None;
+        }
+        let resolver = self.resolver().ok()?;
+        let name = host.trim_end_matches('.').to_string() + ".";
+        let lookup = resolver.lookup(name.as_str(), RecordType::HTTPS).await.ok()?;
+        let mut best: Option<(u16, HttpsInfo)> = None;
+        for r in lookup.answers() {
+            let RData::HTTPS(h) = &r.data else { continue };
+            if h.svc_priority == 0 {
+                continue;
+            }
+            let mut info = HttpsInfo::default();
+            for (_, v) in &h.svc_params {
+                match v {
+                    SvcParamValue::Alpn(a) => info.alpn = a.0.clone(),
+                    SvcParamValue::Port(p) => info.port = Some(*p),
+                    SvcParamValue::EchConfigList(e) => info.ech = Some(e.0.clone()),
+                    _ => {}
+                }
+            }
+            if best.as_ref().is_none_or(|(p, _)| h.svc_priority < *p) {
+                best = Some((h.svc_priority, info));
+            }
+        }
+        best.map(|(_, i)| i)
     }
 
     /// Look up records of one type, such as `MX` or `TXT`. For `PTR`, an IP address is

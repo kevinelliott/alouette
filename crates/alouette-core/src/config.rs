@@ -237,6 +237,11 @@ pub struct Network {
     pub tls_min: String,
     /// Per-host routing rules, checked in order before `proxy`.
     pub routes: Vec<Route>,
+    /// Use HTTP/3 over QUIC when a site offers it and the connection is direct.
+    pub http3: bool,
+    /// Hide the name of the site you visit with Encrypted Client Hello when its DNS
+    /// HTTPS record offers it. Best with encrypted DNS.
+    pub ech: bool,
 }
 
 impl Default for Network {
@@ -249,6 +254,8 @@ impl Default for Network {
             connect_timeout_secs: 15,
             tls_min: "1.2".into(),
             routes: vec![],
+            http3: true,
+            ech: true,
         }
     }
 }

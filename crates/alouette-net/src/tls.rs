@@ -33,11 +33,35 @@ pub fn provider() -> Arc<CryptoProvider> {
 }
 
 pub fn client_config(verify: Verify, tls13_only: bool, alpn: &[&[u8]]) -> Result<ClientConfig, NetError> {
+    client_config_ech(verify, tls13_only, alpn, None)
+}
+
+/// An ECH configuration from an ECHConfigList (as DNS HTTPS records carry), if one of its
+/// configs suits our HPKE suites.
+pub fn ech_config(list: &[u8]) -> Option<rustls::client::EchConfig> {
+    rustls::client::EchConfig::new(
+        rustls::pki_types::EchConfigListBytes::from(list.to_vec()),
+        rustls::crypto::aws_lc_rs::hpke::ALL_SUPPORTED_SUITES,
+    )
+    .ok()
+}
+
+/// Like [`client_config`], with Encrypted Client Hello when `ech` holds a usable config
+/// list. ECH needs TLS 1.3.
+pub fn client_config_ech(
+    verify: Verify,
+    tls13_only: bool,
+    alpn: &[&[u8]],
+    ech: Option<&[u8]>,
+) -> Result<ClientConfig, NetError> {
     let versions: &[&rustls::SupportedProtocolVersion] =
         if tls13_only { &[&rustls::version::TLS13] } else { &[&rustls::version::TLS13, &rustls::version::TLS12] };
-    let builder = ClientConfig::builder_with_provider(provider())
-        .with_protocol_versions(versions)
-        .map_err(|e| NetError::Tls(e.to_string()))?;
+    let builder = ClientConfig::builder_with_provider(provider());
+    let builder = match ech.and_then(ech_config) {
+        Some(cfg) => builder.with_ech(rustls::client::EchMode::Enable(cfg)),
+        None => builder.with_protocol_versions(versions),
+    }
+    .map_err(|e| NetError::Tls(e.to_string()))?;
     let mut cfg = match verify {
         Verify::System => {
             builder.with_platform_verifier().map_err(|e| NetError::Tls(e.to_string()))?.with_no_client_auth()
@@ -104,6 +128,8 @@ pub struct TlsInfo {
     pub verified: bool,
     /// The certificates the server sent, leaf first, as DER.
     pub chain: Vec<Vec<u8>>,
+    /// The server accepted Encrypted Client Hello, so the name was hidden.
+    pub ech: bool,
 }
 
 impl TlsInfo {
@@ -130,10 +156,20 @@ impl TlsInfo {
             cert_sha256,
             verified: verify == Verify::System,
             chain,
+            ech: conn.ech_status() == rustls::client::EchStatus::Accepted,
         }
     }
 }
 
 pub fn fingerprint(der: &[u8]) -> String {
     Sha256::digest(der).iter().map(|b| format!("{b:02x}")).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn bad_ech_lists_are_ignored() {
+        assert!(super::ech_config(b"not an ECHConfigList").is_none());
+        assert!(super::client_config_ech(super::Verify::System, false, &[b"h2"], Some(b"junk")).is_ok());
+    }
 }

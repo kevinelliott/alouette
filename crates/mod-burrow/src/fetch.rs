@@ -158,7 +158,7 @@ impl Loader {
         req: &Request,
         pins_changed: &mut bool,
     ) -> Result<Result<alouette_net::TlsConn, Outcome>, String> {
-        let opts = TlsOptions { verify: Verify::Tofu, alpn: vec![], server_name: None };
+        let opts = TlsOptions { verify: Verify::Tofu, alpn: vec![], server_name: None, ech: None };
         let conn = self.net.tls(host, port, &opts).await.map_err(|e| e.to_string())?;
         let fp = conn.info.tls.as_ref().and_then(|t| t.cert_sha256.clone()).unwrap_or_default();
         let key = format!("{host}:{port}");

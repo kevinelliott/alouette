@@ -40,7 +40,7 @@ pub struct WebResponse {
     pub headers: Vec<(String, String)>,
     /// The body, decompressed.
     pub body: Vec<u8>,
-    /// "h2" or "http/1.1".
+    /// "h3", "h2" or "http/1.1".
     pub protocol: &'static str,
     pub info: ConnInfo,
     /// Every URL that redirected here, in order.
@@ -206,13 +206,26 @@ pub struct Browser {
     net: Net,
     pub jar: Arc<Mutex<Jar>>,
     h2: Arc<tokio::sync::Mutex<H2Pool>>,
+    h3: Arc<tokio::sync::Mutex<HashMap<String, crate::quic::H3Conn>>>,
+    /// HTTP/3 ports origins offered by Alt-Svc; None once HTTP/3 failed there.
+    alt: Arc<Mutex<HashMap<String, Option<u16>>>>,
+    /// HTTPS records by host.
+    svcb: Arc<tokio::sync::Mutex<HashMap<String, Option<crate::dns::HttpsInfo>>>>,
     /// The largest body accepted, after decompression.
     pub max_body: usize,
 }
 
 impl Browser {
     pub fn new(net: Net) -> Self {
-        Self { net, jar: Arc::default(), h2: Arc::default(), max_body: 16 << 20 }
+        Self {
+            net,
+            jar: Arc::default(),
+            h2: Arc::default(),
+            h3: Arc::default(),
+            alt: Arc::default(),
+            svcb: Arc::default(),
+            max_body: 16 << 20,
+        }
     }
 
     pub fn net(&self) -> &Net {
@@ -253,6 +266,13 @@ impl Browser {
                 ));
             }
             let mut resp = self.once(&url, &method, &headers, body.as_deref()).await?;
+            if resp.protocol != "h3"
+                && url.scheme() == "https"
+                && let Some(port) = resp.header("alt-svc").and_then(crate::quic::alt_svc_h3)
+            {
+                let origin = url.origin().ascii_serialization();
+                self.alt.lock().unwrap().entry(origin).or_insert(Some(port));
+            }
             for (k, v) in &resp.headers {
                 if k.eq_ignore_ascii_case("set-cookie") {
                     self.jar.lock().unwrap().store(&url, v);
@@ -294,6 +314,35 @@ impl Browser {
     ) -> Result<WebResponse, NetError> {
         if url.scheme() == "https" {
             let origin = url.origin().ascii_serialization();
+            let host = url.host_str().unwrap_or("").to_string();
+            let direct = self.net.is_direct(&host);
+            let svcb = if direct && (self.net.ech_enabled() || self.net.http3_enabled()) {
+                self.https_record(&host).await
+            } else {
+                None
+            };
+            let ech = svcb.as_ref().and_then(|s| s.ech.clone()).filter(|_| self.net.ech_enabled());
+            // HTTP/3 when the site offered it, by Alt-Svc or its HTTPS record.
+            let alt = self.alt.lock().unwrap().get(&origin).cloned();
+            let h3_port = match alt {
+                Some(p) => p,
+                None => svcb
+                    .as_ref()
+                    .filter(|s| s.alpn.iter().any(|a| a == "h3"))
+                    .map(|s| s.port.unwrap_or(url.port_or_known_default().unwrap_or(443))),
+            };
+            if direct
+                && self.net.http3_enabled()
+                && let Some(port) = h3_port
+            {
+                match self.h3_once(&origin, &host, port, ech.as_deref(), url, method, headers, body).await {
+                    Ok(r) => return Ok(r),
+                    Err(e) => {
+                        tracing::debug!("HTTP/3 to {origin} failed, using TCP: {e}");
+                        self.alt.lock().unwrap().insert(origin.clone(), None);
+                    }
+                }
+            }
             // Reuse an open HTTP/2 connection.
             let cached = self.h2.lock().await.get(&origin).cloned();
             if let Some((sender, info)) = cached {
@@ -304,9 +353,8 @@ impl Browser {
                     }
                 }
             }
-            let host = url.host_str().unwrap_or("").to_string();
             let port = url.port_or_known_default().unwrap_or(443);
-            let opts = TlsOptions { alpn: vec![b"h2", b"http/1.1"], ..TlsOptions::default() };
+            let opts = TlsOptions { alpn: vec![b"h2", b"http/1.1"], ech, ..TlsOptions::default() };
             let conn = self.net.tls(&host, port, &opts).await?;
             if conn.stream.get_ref().1.alpn_protocol() == Some(b"h2") {
                 let info = conn.info.clone();
@@ -331,6 +379,57 @@ impl Browser {
             body: r.body,
             protocol: "http/1.1",
             info: r.info,
+            redirects: vec![],
+        })
+    }
+
+    async fn https_record(&self, host: &str) -> Option<crate::dns::HttpsInfo> {
+        if let Some(c) = self.svcb.lock().await.get(host) {
+            return c.clone();
+        }
+        let r = tokio::time::timeout(std::time::Duration::from_millis(1500), self.net.dns().https_record(host))
+            .await
+            .ok()
+            .flatten();
+        self.svcb.lock().await.insert(host.to_string(), r.clone());
+        r
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn h3_once(
+        &self,
+        origin: &str,
+        host: &str,
+        port: u16,
+        ech: Option<&[u8]>,
+        url: &Url,
+        method: &str,
+        headers: &[(String, String)],
+        body: Option<&[u8]>,
+    ) -> Result<WebResponse, NetError> {
+        let cached = self.h3.lock().await.get(origin).cloned();
+        let mut conn = match cached {
+            Some(c) => c,
+            None => {
+                let c = self.net.h3_connect(host, port, ech, crate::Verify::System).await?;
+                self.h3.lock().await.insert(origin.to_string(), c.clone());
+                c
+            }
+        };
+        let r = match crate::quic::h3_request(&mut conn.sender, url, method, headers, body, self.max_body).await {
+            Ok(r) => r,
+            Err(e) => {
+                self.h3.lock().await.remove(origin);
+                return Err(e);
+            }
+        };
+        Ok(WebResponse {
+            url: url.to_string(),
+            status: r.status,
+            headers: r.headers,
+            body: r.body,
+            protocol: "h3",
+            info: conn.info.clone(),
             redirects: vec![],
         })
     }
