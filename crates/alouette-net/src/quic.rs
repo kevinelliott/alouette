@@ -67,7 +67,11 @@ impl Net {
         let client_cfg = quinn::ClientConfig::new(Arc::new(quic));
         let name = host.trim_start_matches('[').trim_end_matches(']');
         let mut last = None;
-        for addr in addrs.iter().take(4) {
+        let tries: Vec<SocketAddr> = addrs.iter().take(4).copied().collect();
+        for (n, addr) in tries.iter().enumerate() {
+            // QUIC has no refusal to wait for: an address that drops packets would hold
+            // the whole attempt, so give each but the last a short turn.
+            let more = n + 1 < tries.len();
             let bind: SocketAddr =
                 if addr.is_ipv6() { "[::]:0".parse().unwrap() } else { "0.0.0.0:0".parse().unwrap() };
             let mut endpoint = match quinn::Endpoint::client(bind) {
@@ -85,7 +89,18 @@ impl Net {
                     continue;
                 }
             };
-            let conn = match connecting.await {
+            let res = if more {
+                match tokio::time::timeout(std::time::Duration::from_millis(2500), connecting).await {
+                    Ok(r) => r,
+                    Err(_) => {
+                        last = Some(NetError::Timeout(addr.to_string()));
+                        continue;
+                    }
+                }
+            } else {
+                connecting.await
+            };
+            let conn = match res {
                 Ok(c) => c,
                 Err(e) => {
                     last = Some(NetError::Proxy(format!("QUIC: {e}")));
