@@ -11,7 +11,6 @@ edition = "2024"
 rust-version = "1.89"
 license = "MIT"
 repository = "https://github.com/kevinelliott/alouette"
-homepage = "https://github.com/kevinelliott/alouette"
 authors = ["Kevin Elliott and Alouette contributors"]
 
 [workspace.dependencies]

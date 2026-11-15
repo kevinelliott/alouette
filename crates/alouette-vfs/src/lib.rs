@@ -92,16 +92,57 @@ pub async fn copy_file(
     size: u64,
     progress: Progress<'_>,
 ) -> Result<u64> {
-    let (mut w, mut r) = tokio::io::duplex(256 * 1024);
-    let down = async move {
+    let (mut w, r) = tokio::io::duplex(256 * 1024);
+    let finished = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let mut r = Guarded { inner: r, finished: finished.clone() };
+    let mut failed = None;
+    let down = async {
         let res = src.download(src_path, &mut w, &|_| {}).await;
+        match res {
+            // Only a complete download lets the upload see a clean end.
+            Ok(_) => finished.store(true, std::sync::atomic::Ordering::Release),
+            Err(e) => failed = Some(e),
+        }
         drop(w);
-        res
+        Ok::<(), String>(())
     };
     let up = dst.upload(dst_path, &mut r, size, progress);
-    let (d, u) = tokio::join!(down, up);
-    d?;
-    u
+    // If the upload fails, stop the download too; if the download fails, the upload
+    // gets an error at the end of the stream instead of an ordinary end, and so does
+    // not replace the destination.
+    let res = tokio::try_join!(down, up);
+    if let Some(e) = failed {
+        return Err(e);
+    }
+    res.map(|(_, n)| n)
+}
+
+/// The read side of a copy: reports an error, not an end, when the download stopped early.
+struct Guarded {
+    inner: tokio::io::DuplexStream,
+    finished: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl AsyncRead for Guarded {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        buf: &mut tokio::io::ReadBuf<'_>,
+    ) -> std::task::Poll<std::io::Result<()>> {
+        let before = buf.filled().len();
+        let r = Pin::new(&mut self.inner).poll_read(cx, buf);
+        if let std::task::Poll::Ready(Ok(())) = r
+            && buf.filled().len() == before
+            && buf.remaining() > 0
+            && !self.finished.load(std::sync::atomic::Ordering::Acquire)
+        {
+            return std::task::Poll::Ready(Err(std::io::Error::new(
+                std::io::ErrorKind::UnexpectedEof,
+                "the download stopped early",
+            )));
+        }
+        r
+    }
 }
 
 /// What [`copy`] reports as it goes.
@@ -260,6 +301,79 @@ pub fn human_size(n: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tokio::io::AsyncWriteExt;
+
+    /// A source that sends `bytes` and then fails, or ends cleanly.
+    struct Flaky {
+        bytes: usize,
+        fail: bool,
+    }
+
+    impl Fs for Flaky {
+        fn label(&self) -> String {
+            "flaky".into()
+        }
+        fn home(&self) -> BoxFut<'_, String> {
+            Box::pin(async { Ok("/".into()) })
+        }
+        fn list<'a>(&'a self, _: &'a str) -> BoxFut<'a, Vec<Entry>> {
+            Box::pin(async { Ok(vec![]) })
+        }
+        fn download<'a>(&'a self, _: &'a str, to: Writer<'a>, _: Progress<'a>) -> BoxFut<'a, u64> {
+            Box::pin(async move {
+                to.write_all(&vec![b'x'; self.bytes]).await.map_err(|e| e.to_string())?;
+                if self.fail { Err("connection lost".into()) } else { Ok(self.bytes as u64) }
+            })
+        }
+        fn upload<'a>(&'a self, _: &'a str, _: Reader<'a>, _: u64, _: Progress<'a>) -> BoxFut<'a, u64> {
+            Box::pin(async { Err("read only".into()) })
+        }
+        fn mkdir<'a>(&'a self, _: &'a str) -> BoxFut<'a, ()> {
+            Box::pin(async { Ok(()) })
+        }
+        fn remove<'a>(&'a self, _: &'a str, _: bool) -> BoxFut<'a, ()> {
+            Box::pin(async { Ok(()) })
+        }
+        fn rename<'a>(&'a self, _: &'a str, _: &'a str) -> BoxFut<'a, ()> {
+            Box::pin(async { Ok(()) })
+        }
+    }
+
+    fn rt() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap()
+    }
+
+    #[test]
+    fn a_failed_download_keeps_the_old_file() {
+        let dir = std::env::temp_dir().join(format!("alouette-vfs-flaky-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let dst = dir.join("keep.txt");
+        std::fs::write(&dst, b"precious").unwrap();
+        let path = dst.to_string_lossy().to_string();
+        let r = rt().block_on(copy_file(&Flaky { bytes: 1000, fail: true }, "/f", &local::Local, &path, 5000, &|_| {}));
+        assert_eq!(r.unwrap_err(), "connection lost");
+        assert_eq!(std::fs::read(&dst).unwrap(), b"precious");
+        assert!(!dir.join("keep.txt.alouette-part").exists());
+        // A complete download replaces it.
+        let r = rt().block_on(copy_file(&Flaky { bytes: 10, fail: false }, "/f", &local::Local, &path, 10, &|_| {}));
+        assert_eq!(r.unwrap(), 10);
+        assert_eq!(std::fs::read(&dst).unwrap(), b"xxxxxxxxxx");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_failed_upload_stops_the_download() {
+        // More than the pipe holds, into a folder that does not exist: must not hang.
+        let path = std::env::temp_dir().join("alouette-no-such-dir/x/y.bin").to_string_lossy().to_string();
+        let r = rt().block_on(async {
+            tokio::time::timeout(
+                std::time::Duration::from_secs(10),
+                copy_file(&Flaky { bytes: 2 << 20, fail: false }, "/f", &local::Local, &path, 2 << 20, &|_| {}),
+            )
+            .await
+        });
+        assert!(r.expect("copy hung").is_err());
+    }
 
     #[test]
     fn paths() {

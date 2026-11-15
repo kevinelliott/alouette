@@ -290,6 +290,28 @@ impl Browser {
                     ));
                 }
             }
+            Outcome::Redirected { from, to } => {
+                // Web pages are safe to follow; anything else (a terminal, mail, files) waits
+                // for a press, so a server cannot run programs or send mail by redirecting.
+                let scheme = to.split(':').next().unwrap_or("").to_ascii_lowercase();
+                self.url = from.clone();
+                if matches!(scheme.as_str(), "http" | "https") {
+                    cx.open_url(to.clone());
+                    self.set_doc(Doc::message(
+                        "Opened elsewhere",
+                        Kind::Text,
+                        &[&format!("{to} opened in its own window.")],
+                    ));
+                } else {
+                    let lines = [
+                        format!("{from} sends you to {to}"),
+                        String::new(),
+                        "Burrow does not open this kind of link by itself.".into(),
+                    ];
+                    let refs: Vec<&str> = lines.iter().map(String::as_str).collect();
+                    self.set_doc(Doc::message("Redirected", Kind::Text, &refs).with_link("Open it", to));
+                }
+            }
             Outcome::Failed { url, error } => {
                 self.url = url.clone();
                 self.set_doc(

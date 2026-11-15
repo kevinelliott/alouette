@@ -73,8 +73,14 @@ pub enum Outcome {
         old: String,
         new: String,
     },
-    /// Hand this URL to another module (a redirect or link to another scheme).
+    /// Hand this URL to another module (a link to another scheme).
     Elsewhere(String),
+    /// The server redirected to a URL Burrow does not show itself. It is not opened
+    /// without asking, since a server must not be able to start a program.
+    Redirected {
+        from: String,
+        to: String,
+    },
     Failed {
         url: String,
         error: String,
@@ -103,6 +109,12 @@ pub struct Loader {
     pub downloads: PathBuf,
 }
 
+/// Follow a server's redirect only to a scheme Burrow shows itself; anything else is
+/// handed back for the person to open, so a server cannot start a program.
+fn redirect(from: &str, to: String) -> Result<String, Outcome> {
+    if is_ours(&to) { Ok(to) } else { Err(Outcome::Redirected { from: from.to_string(), to }) }
+}
+
 impl Loader {
     pub async fn load(&self, req: &Request, ctx: &TaskCtx) -> Loaded {
         let mut url = req.url.clone();
@@ -116,10 +128,13 @@ impl Loader {
                 _ => Ok((Outcome::Elsewhere(url.clone()), None)),
             };
             match r {
-                Ok((Outcome::Elsewhere(next), _)) if next != url && is_ours(&next) => {
-                    ctx.detail(format!("redirected to {next}"));
-                    url = next;
-                }
+                Ok((Outcome::Elsewhere(next), info)) if next != url => match redirect(&url, next) {
+                    Ok(next) => {
+                        ctx.detail(format!("redirected to {next}"));
+                        url = next;
+                    }
+                    Err(outcome) => return Loaded { req: 0, outcome, info, pins_changed },
+                },
                 Ok((outcome, info)) => return Loaded { req: 0, outcome, info, pins_changed },
                 Err(error) => {
                     return Loaded { req: 0, outcome: Outcome::Failed { url, error }, info: None, pins_changed };
@@ -343,5 +358,23 @@ mod tests {
         assert_eq!(file_name(&u, "image/png"), "h.png");
         let u = Url::parse("gopher://h/9/../..%2Fetc%2Fpasswd").unwrap();
         assert!(!file_name(&u, "").contains('/'));
+    }
+}
+
+#[cfg(test)]
+mod redirect_tests {
+    use super::*;
+
+    #[test]
+    fn redirects_never_leave_burrow_by_themselves() {
+        assert_eq!(redirect("gemini://a/", "gemini://b/".into()).ok().as_deref(), Some("gemini://b/"));
+        for to in ["term:/usr/bin/touch%20/tmp/x", "mailto:a@example.org", "files:", "https://example.org/"] {
+            match redirect("gemini://a/", to.into()) {
+                Err(Outcome::Redirected { from, to: t }) => {
+                    assert_eq!((from.as_str(), t.as_str()), ("gemini://a/", to))
+                }
+                _ => panic!("{to} was followed"),
+            }
+        }
     }
 }
