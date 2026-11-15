@@ -80,11 +80,11 @@ Every module connects through one layer, configured in `[network]`:
 - SOCKS5 (with remote DNS for Tor) and HTTP CONNECT proxies, globally or per host. `.onion`
   names never leak to DNS: without a Tor route they are refused.
 
-`alouette probe example.org:443` shows exactly how a connection was made:
+`alouette probe example.org:443` shows how a connection was made, for example:
 
 ```text
 via      direct
-peer     [2606:2800:21f:cb07:6820:80da:af6b:8b2c]:443
+peer     [2001:db8::443]:443
 tls      TLS 1.3 · TLS13_AES_256_GCM_SHA384 · X25519MLKEM768
 pq       yes (hybrid ML-KEM)
 badge    IPv6 · TLS 1.3 · PQ
