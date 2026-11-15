@@ -118,7 +118,7 @@ badge    IPv6 · TLS 1.3 · PQ
 
 ## Building
 
-Rust 1.88 or newer. `cargo test --workspace` runs every test, including screen snapshots
+Rust 1.89 or newer. `cargo test --workspace` runs every test, including screen snapshots
 (`cargo insta review` updates them after an intended change).
 
 | Crate | Role |
