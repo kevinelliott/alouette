@@ -8,6 +8,7 @@
 //! a URL goes through the core router, so a link in one module can open another.
 
 pub mod app;
+pub mod ask;
 pub mod builtin;
 pub mod chrome;
 pub mod dialog;

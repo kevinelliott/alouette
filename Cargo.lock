@@ -75,6 +75,7 @@ dependencies = [
  "insta",
  "mod-burrow",
  "mod-demo",
+ "mod-files",
  "mod-inquire",
  "mod-nettools",
  "mod-terminal",
@@ -206,6 +207,23 @@ dependencies = [
  "toml",
  "tracing",
  "unicode-width",
+ "url",
+]
+
+[[package]]
+name = "alouette-vfs"
+version = "0.1.0"
+dependencies = [
+ "alouette-core",
+ "alouette-net",
+ "alouette-ssh",
+ "aws-lc-rs",
+ "base64 0.22.1",
+ "proto-ftp",
+ "quick-xml",
+ "russh-sftp",
+ "time",
+ "tokio",
  "url",
 ]
 
@@ -2432,6 +2450,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "mod-files"
+version = "0.1.0"
+dependencies = [
+ "alouette-core",
+ "alouette-net",
+ "alouette-ssh",
+ "alouette-ui",
+ "alouette-vfs",
+ "crossterm",
+ "mod-terminal",
+ "ratatui",
+ "time",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "mod-inquire"
 version = "0.1.0"
 dependencies = [
@@ -3255,6 +3290,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "proto-ftp"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
 name = "proto-gemini"
 version = "0.1.0"
 dependencies = [
@@ -3292,6 +3335,15 @@ checksum = "4dcd034599e63b970727f70d79e02d62390a4a84f7c6b827c27c46d5ac3fa622"
 dependencies = [
  "ar_archive_writer",
  "cc",
+]
+
+[[package]]
+name = "quick-xml"
+version = "0.41.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]

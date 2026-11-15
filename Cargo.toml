@@ -32,8 +32,11 @@ mod-nettools = { path = "crates/mod-nettools", version = "0.1.0" }
 mod-inquire = { path = "crates/mod-inquire", version = "0.1.0" }
 alouette-term = { path = "crates/alouette-term", version = "0.1.0" }
 proto-telnet = { path = "crates/proto-telnet", version = "0.1.0" }
+proto-ftp = { path = "crates/proto-ftp", version = "0.1.0" }
+alouette-vfs = { path = "crates/alouette-vfs", version = "0.1.0" }
 alouette-ssh = { path = "crates/alouette-ssh", version = "0.1.0" }
 mod-terminal = { path = "crates/mod-terminal", version = "0.1.0" }
+mod-files = { path = "crates/mod-files", version = "0.1.0" }
 serde_json = "1"
 x509-parser = "0.18"
 surge-ping = "0.9"

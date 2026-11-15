@@ -5,7 +5,7 @@
 use url::Url;
 
 use crate::{ConnInfo, Io, Net, NetError, TlsOptions};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 pub const USER_AGENT: &str =
     concat!("Alouette/", env!("CARGO_PKG_VERSION"), " (+https://github.com/kevinelliott/alouette)");
@@ -32,12 +32,29 @@ impl Response {
     }
 }
 
+/// What a request sends.
+pub enum Body<'a> {
+    Empty,
+    Bytes(&'a [u8]),
+    /// A stream of known length, such as a file being uploaded.
+    Reader(&'a mut (dyn AsyncRead + Unpin + Send), u64),
+}
+
+/// Where a response body goes.
+pub enum Sink<'a> {
+    /// Into `Response::body`, up to this many bytes.
+    Memory(usize),
+    /// Into a writer, reporting bytes so far. The body is only written for 2xx answers;
+    /// other answers land in `Response::body` (up to 64 KiB) so errors can be read.
+    Writer(&'a mut (dyn AsyncWrite + Unpin + Send), &'a (dyn Fn(u64) + Sync)),
+}
+
 impl Net {
     /// GET a URL, following up to five redirects. `max` caps the body size.
     pub async fn get(&self, url: &str, headers: &[(&str, &str)], max: usize) -> Result<Response, NetError> {
         let mut url = Url::parse(url).map_err(|e| NetError::Config(format!("{url}: {e}")))?;
         for _ in 0..=MAX_REDIRECTS {
-            let resp = self.get_once(&url, headers, max).await?;
+            let resp = self.request(&url, "GET", headers, Body::Empty, Sink::Memory(max)).await?;
             if matches!(resp.status, 301 | 302 | 303 | 307 | 308)
                 && let Some(loc) = resp.header("location")
             {
@@ -49,7 +66,15 @@ impl Net {
         Err(NetError::Proxy(format!("too many redirects from {url}")))
     }
 
-    async fn get_once(&self, url: &Url, headers: &[(&str, &str)], max: usize) -> Result<Response, NetError> {
+    /// One HTTP/1.1 request, without following redirects. For WebDAV, S3 and other APIs.
+    pub async fn request(
+        &self,
+        url: &Url,
+        method: &str,
+        headers: &[(&str, &str)],
+        body: Body<'_>,
+        sink: Sink<'_>,
+    ) -> Result<Response, NetError> {
         let https = match url.scheme() {
             "https" => true,
             "http" => false,
@@ -75,15 +100,49 @@ impl Net {
             None => url.host_str().unwrap_or("").to_string(),
         };
         let mut req = format!(
-            "GET {target} HTTP/1.1\r\nHost: {host_header}\r\nUser-Agent: {USER_AGENT}\r\nAccept-Encoding: identity\r\nConnection: close\r\n"
+            "{method} {target} HTTP/1.1\r\nHost: {host_header}\r\nUser-Agent: {USER_AGENT}\r\nAccept-Encoding: identity\r\nConnection: close\r\n"
         );
         for (k, v) in headers {
             req.push_str(&format!("{k}: {v}\r\n"));
         }
+        let len = match &body {
+            Body::Empty => None,
+            Body::Bytes(b) => Some(b.len() as u64),
+            Body::Reader(_, n) => Some(*n),
+        };
+        if let Some(n) = len.filter(|_| !headers.iter().any(|(k, _)| k.eq_ignore_ascii_case("content-length"))) {
+            req.push_str(&format!("Content-Length: {n}\r\n"));
+        }
         req.push_str("\r\n");
         stream.write_all(req.as_bytes()).await?;
+        match body {
+            Body::Empty => {}
+            Body::Bytes(b) => stream.write_all(b).await?,
+            Body::Reader(r, n) => {
+                let copied = tokio::io::copy(&mut r.take(n), &mut stream).await?;
+                if copied != n {
+                    return Err(NetError::Proxy(format!("upload ended after {copied} of {n} bytes")));
+                }
+            }
+        }
         stream.flush().await?;
-        let (status, headers, body) = read_response(&mut stream, max).await?;
+        let (status, headers, rest) = read_head(&mut stream).await?;
+        let no_body = method.eq_ignore_ascii_case("HEAD") || status == 204 || status == 304 || status < 200;
+        let mut body = Vec::new();
+        if !no_body {
+            match sink {
+                Sink::Memory(max) => {
+                    read_body(&mut stream, rest, &headers, &mut body, max, &|_| {}).await?;
+                }
+                Sink::Writer(w, progress) if (200..300).contains(&status) => {
+                    read_body(&mut stream, rest, &headers, w, u64::MAX as usize, progress).await?;
+                    w.flush().await?;
+                }
+                Sink::Writer(..) => {
+                    read_body(&mut stream, rest, &headers, &mut body, 64 * 1024, &|_| {}).await?;
+                }
+            }
+        }
         Ok(Response { url: url.to_string(), status, headers, body, info })
     }
 }
@@ -93,6 +152,14 @@ pub async fn read_response<S: AsyncRead + Unpin>(
     s: &mut S,
     max: usize,
 ) -> Result<(u16, Vec<(String, String)>, Vec<u8>), NetError> {
+    let (status, headers, rest) = read_head(s).await?;
+    let mut body = Vec::new();
+    read_body(s, rest, &headers, &mut body, max, &|_| {}).await?;
+    Ok((status, headers, body))
+}
+
+/// Read the status line and headers. Returns bytes already read past them.
+pub async fn read_head<S: AsyncRead + Unpin>(s: &mut S) -> Result<(u16, Vec<(String, String)>, Vec<u8>), NetError> {
     let mut buf = Vec::with_capacity(8192);
     let mut tmp = [0u8; 8192];
     let head_end = loop {
@@ -109,7 +176,7 @@ pub async fn read_response<S: AsyncRead + Unpin>(
         buf.extend_from_slice(&tmp[..n]);
     };
     let head = String::from_utf8_lossy(&buf[..head_end]).into_owned();
-    let mut rest = buf[head_end + 4..].to_vec();
+    let rest = buf[head_end + 4..].to_vec();
     let mut lines = head.split("\r\n");
     let status_line = lines.next().unwrap_or("");
     let status: u16 = status_line
@@ -119,12 +186,25 @@ pub async fn read_response<S: AsyncRead + Unpin>(
         .ok_or_else(|| NetError::Proxy(format!("bad HTTP status line: {status_line}")))?;
     let headers: Vec<(String, String)> =
         lines.filter_map(|l| l.split_once(':').map(|(k, v)| (k.trim().to_string(), v.trim().to_string()))).collect();
-    let get = |name: &str| headers.iter().find(|(k, _)| k.eq_ignore_ascii_case(name)).map(|(_, v)| v.clone());
+    Ok((status, headers, rest))
+}
 
-    let body = if get("transfer-encoding").is_some_and(|v| v.to_ascii_lowercase().contains("chunked")) {
-        let mut out = Vec::new();
+/// Read a body framed by Content-Length, chunked encoding, or the connection closing, into
+/// `out`. Fails past `max` bytes.
+pub async fn read_body<S: AsyncRead + Unpin, W: AsyncWrite + Unpin + ?Sized>(
+    s: &mut S,
+    mut rest: Vec<u8>,
+    headers: &[(String, String)],
+    out: &mut W,
+    max: usize,
+    progress: &(dyn Fn(u64) + Sync),
+) -> Result<u64, NetError> {
+    let mut tmp = vec![0u8; 64 * 1024];
+    let get = |name: &str| headers.iter().find(|(k, _)| k.eq_ignore_ascii_case(name)).map(|(_, v)| v.clone());
+    let too_big = || NetError::Proxy(format!("the response is larger than {max} bytes"));
+    let mut total: u64 = 0;
+    if get("transfer-encoding").is_some_and(|v| v.to_ascii_lowercase().contains("chunked")) {
         loop {
-            // Make sure a full size line is buffered.
             let line_end = loop {
                 if let Some(i) = find(&rest, b"\r\n") {
                     break i;
@@ -142,47 +222,73 @@ pub async fn read_response<S: AsyncRead + Unpin>(
             if size == 0 {
                 break;
             }
-            if out.len() + size > max {
-                return Err(NetError::Proxy(format!("the response is larger than {max} bytes")));
+            if total as usize + size > max {
+                return Err(too_big());
             }
-            while rest.len() < size + 2 {
+            let mut left = size;
+            while left > 0 {
+                if rest.is_empty() {
+                    let n = read_some(s, &mut tmp).await?;
+                    if n == 0 {
+                        return Err(NetError::Proxy("chunked body ended early".into()));
+                    }
+                    rest.extend_from_slice(&tmp[..n]);
+                }
+                let take = left.min(rest.len());
+                out.write_all(&rest[..take]).await?;
+                rest.drain(..take);
+                left -= take;
+                total += take as u64;
+                progress(total);
+            }
+            // The CRLF after the chunk.
+            while rest.len() < 2 {
                 let n = read_some(s, &mut tmp).await?;
                 if n == 0 {
                     return Err(NetError::Proxy("chunked body ended early".into()));
                 }
                 rest.extend_from_slice(&tmp[..n]);
             }
-            out.extend_from_slice(&rest[..size]);
-            rest.drain(..size + 2);
+            rest.drain(..2);
         }
-        out
-    } else if let Some(len) = get("content-length").and_then(|v| v.parse::<usize>().ok()) {
-        if len > max {
-            return Err(NetError::Proxy(format!("the response is larger than {max} bytes")));
+    } else if let Some(len) = get("content-length").and_then(|v| v.parse::<u64>().ok()) {
+        if len as usize > max {
+            return Err(too_big());
         }
-        while rest.len() < len {
+        let first = rest.len().min(len as usize);
+        out.write_all(&rest[..first]).await?;
+        total = first as u64;
+        progress(total);
+        while total < len {
             let n = read_some(s, &mut tmp).await?;
             if n == 0 {
-                break;
+                return Err(NetError::Proxy(format!("the body ended after {total} of {len} bytes")));
             }
-            rest.extend_from_slice(&tmp[..n]);
+            let take = (n as u64).min(len - total) as usize;
+            out.write_all(&tmp[..take]).await?;
+            total += take as u64;
+            progress(total);
         }
-        rest.truncate(len);
-        rest
     } else {
+        if rest.len() > max {
+            return Err(too_big());
+        }
+        out.write_all(&rest).await?;
+        total = rest.len() as u64;
         loop {
             let n = read_some(s, &mut tmp).await?;
             if n == 0 {
                 break;
             }
-            if rest.len() + n > max {
-                return Err(NetError::Proxy(format!("the response is larger than {max} bytes")));
+            if total as usize + n > max {
+                return Err(too_big());
             }
-            rest.extend_from_slice(&tmp[..n]);
+            out.write_all(&tmp[..n]).await?;
+            total += n as u64;
+            progress(total);
         }
-        rest
-    };
-    Ok((status, headers, body))
+    }
+    Ok(total)
 }
 
 async fn read_some<S: AsyncRead + Unpin>(s: &mut S, buf: &mut [u8]) -> Result<usize, NetError> {

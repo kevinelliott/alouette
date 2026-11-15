@@ -7,8 +7,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKi
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Clear, Paragraph, Wrap};
+use ratatui::widgets::Paragraph;
 use tokio::sync::mpsc;
 
 use crate::emu::{Input, Shared, Status};
@@ -83,34 +82,6 @@ impl TermWindow {
         p.screen_mut().set_scrollback((cur + step).max(0) as usize);
     }
 
-    fn question_key(&mut self, key: KeyEvent, yes_no: bool) -> Handled {
-        if yes_no {
-            match key.code {
-                KeyCode::Char('y' | 'Y') => self.shared.answer(Some("yes".into())),
-                KeyCode::Char('n' | 'N') | KeyCode::Esc => self.shared.answer(None),
-                _ => {}
-            }
-            return Handled::Yes;
-        }
-        match key.code {
-            KeyCode::Enter => {
-                let v = std::mem::take(&mut self.answer);
-                self.shared.answer(Some(v));
-            }
-            KeyCode::Esc => {
-                self.answer.clear();
-                self.shared.answer(None);
-            }
-            KeyCode::Backspace => {
-                self.answer.pop();
-            }
-            KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => self.answer.clear(),
-            KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => self.answer.push(c),
-            _ => {}
-        }
-        Handled::Yes
-    }
-
     fn draw_grid(&mut self, frame: &mut Frame, area: Rect, cx: &DrawCx) {
         let mut p = self.shared.parser();
         // Pick up a title set by the remote program.
@@ -177,46 +148,9 @@ impl TermWindow {
     }
 
     fn draw_question(&self, frame: &mut Frame, area: Rect, cx: &DrawCx) {
-        let Some(q) = self.shared.question() else { return };
-        let t = cx.theme;
-        let w = area.width.saturating_sub(4).clamp(20, 72);
-        let h = (q.body.len() as u16 + 5).min(area.height);
-        let r = Rect {
-            x: area.x + area.width.saturating_sub(w) / 2,
-            y: area.y + area.height.saturating_sub(h) / 2,
-            width: w.min(area.width),
-            height: h,
-        };
-        frame.render_widget(Clear, r);
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .title(format!(" {} ", q.title))
-            .style(Style::new().fg(t.dialog_fg).bg(t.dialog_bg));
-        let inner = block.inner(r);
-        frame.render_widget(block, r);
-        let mut lines: Vec<Line> = q.body.iter().map(|b| Line::from(b.clone())).collect();
-        lines.push(Line::default());
-        if q.yes_no {
-            lines.push(Line::from(vec![
-                Span::raw(format!("{} ", q.prompt)),
-                Span::styled("y", t.accent()),
-                Span::raw(" yes   "),
-                Span::styled("n", t.accent()),
-                Span::raw(" no"),
-            ]));
-        } else {
-            let shown = if q.secret { "•".repeat(self.answer.chars().count()) } else { self.answer.clone() };
-            lines.push(Line::from(vec![
-                Span::raw(format!("{}: ", q.prompt)),
-                Span::styled(shown.clone(), Style::new().fg(t.input_fg).bg(t.input_bg)),
-            ]));
-            let x = inner.x + q.prompt.chars().count() as u16 + 2 + shown.chars().count() as u16;
-            let y = inner.y + lines.len() as u16 - 1;
-            if x < inner.right() && y < inner.bottom() {
-                frame.set_cursor_position((x, y));
-            }
+        if let Some(q) = self.shared.question() {
+            alouette_ui::ask::draw(frame, area, cx.theme, &q, &self.answer);
         }
-        frame.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), inner);
     }
 }
 
@@ -292,7 +226,8 @@ impl Window for TermWindow {
 
     fn on_key(&mut self, key: KeyEvent, cx: &mut Cx) -> Handled {
         if let Some(q) = self.shared.question() {
-            return self.question_key(key, q.yes_no);
+            alouette_ui::ask::on_key(self.shared.asker(), &q, &mut self.answer, key);
+            return Handled::Yes;
         }
         if let Status::Exited(_) = self.shared.status() {
             return match key.code {

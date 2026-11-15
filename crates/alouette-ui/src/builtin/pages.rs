@@ -45,7 +45,8 @@ impl TextPage {
             Row::Text(
                 "Alouette brings mail, news, Gopher and Gemini, file transfer, terminals, the web \
                  and more into one terminal app, in the spirit of Minuet (1994). Burrow (Gopher, Gemini \
-                 and Finger) is here now; the other modules follow milestone by milestone."
+                 and Finger), Inquire, NetTools, Terminal and Files are here now; the other modules \
+                 follow milestone by milestone."
                     .into(),
             ),
             Row::Blank,
@@ -64,15 +65,15 @@ impl TextPage {
             Row::Blank,
             Row::Heading("Try these".into()),
             Row::Text("• Open Modules > Burrow > Floodgap Gopher, or gemini://geminiprotocol.net/".into()),
-            Row::Text("• Open Modules > Demo and start a few background jobs, then watch Tasks.".into()),
+            Row::Text("• Open Modules > Terminal > SSH to pick a host from your ~/.ssh/config.".into()),
+            Row::Text("• Open Modules > Files > FTP archive to browse ftp.gnu.org beside your home folder.".into()),
             Row::Text("• Type \"theme\" in the palette and try amber, green or modern-dark.".into()),
             Row::Text("• Open Settings to switch layouts, keymaps and nostalgia touches.".into()),
             Row::Text("• Click and drag window titles. The mouse works everywhere.".into()),
             Row::Blank,
             Row::Heading("Coming next".into()),
             Row::Text(
-                "M1 search (Inquire) and net tools · M2 SSH, Mosh and files · \
-                       M3 Mail · M4 News and social · M5 Web · M6 Contacts and calendar · \
+                "M3 Mail · M4 News and social · M5 Web · M6 Contacts and calendar · \
                        M7 Chat · M8 AI assistant · M9 SSH serve mode · M10 polish and 1.0"
                     .into(),
             ),

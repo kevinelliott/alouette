@@ -6,7 +6,7 @@
 
 use std::sync::{Arc, Mutex, MutexGuard};
 
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::mpsc;
 
 /// What the window sends to the backend.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,22 +23,7 @@ pub enum Status {
     Exited(String),
 }
 
-/// A question the backend needs the person to answer, such as a password.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Question {
-    pub title: String,
-    pub body: Vec<String>,
-    pub prompt: String,
-    /// Hide what is typed (passwords, passphrases).
-    pub secret: bool,
-    /// A yes or no question: the answer is "yes" or None.
-    pub yes_no: bool,
-}
-
-pub(crate) struct Pending {
-    pub question: Question,
-    pub reply: oneshot::Sender<Option<String>>,
-}
+pub use alouette_ui::ask::Question;
 
 /// Collects what the parser asks the host to do.
 #[derive(Default)]
@@ -93,20 +78,22 @@ impl vt100::Callbacks for Hooks {
 pub struct Shared {
     parser: Mutex<vt100::Parser<Hooks>>,
     status: Mutex<Status>,
-    pending: Mutex<Option<Pending>>,
+    asker: alouette_ui::ask::Asker,
     badge: Mutex<Option<String>>,
-    wake: Box<dyn Fn() + Send + Sync>,
+    wake: Arc<dyn Fn() + Send + Sync>,
 }
 
 impl Shared {
     /// `wake` asks the UI to redraw; it is called after output arrives.
     pub fn new(rows: u16, cols: u16, scrollback: usize, wake: impl Fn() + Send + Sync + 'static) -> Arc<Self> {
+        let wake: Arc<dyn Fn() + Send + Sync> = Arc::new(wake);
+        let w2 = wake.clone();
         Arc::new(Self {
             parser: Mutex::new(vt100::Parser::new_with_callbacks(nz(rows), nz(cols), scrollback, Hooks::default())),
             status: Mutex::new(Status::Connecting("Starting".into())),
-            pending: Mutex::new(None),
+            asker: alouette_ui::ask::Asker::new(move || w2()),
             badge: Mutex::new(None),
-            wake: Box::new(wake),
+            wake,
         })
     }
 
@@ -152,20 +139,19 @@ impl Shared {
 
     /// Ask the person something and wait for the answer. None means they cancelled.
     pub async fn ask(&self, question: Question) -> Option<String> {
-        let (tx, rx) = oneshot::channel();
-        *self.pending.lock().unwrap_or_else(|e| e.into_inner()) = Some(Pending { question, reply: tx });
-        (self.wake)();
-        rx.await.ok().flatten()
+        self.asker.ask(question).await
+    }
+
+    pub fn asker(&self) -> &alouette_ui::ask::Asker {
+        &self.asker
     }
 
     pub fn question(&self) -> Option<Question> {
-        self.pending.lock().unwrap_or_else(|e| e.into_inner()).as_ref().map(|p| p.question.clone())
+        self.asker.question()
     }
 
     pub fn answer(&self, value: Option<String>) {
-        if let Some(p) = self.pending.lock().unwrap_or_else(|e| e.into_inner()).take() {
-            let _ = p.reply.send(value);
-        }
+        self.asker.answer(value)
     }
 }
 

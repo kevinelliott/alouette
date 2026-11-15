@@ -22,7 +22,23 @@ Network work runs as tasks. The Tasks window lists them with progress. Select on
 
 ## URLs
 
-Alouette opens these URLs today: about:welcome, about:tasks, about:history, about:settings, about:keys, about:help, about:alouette, about:minuet, and demo: pages from the demo module. Each later milestone adds schemes: gopher, gemini and finger in M1, ssh and sftp in M2, mailto and imap in M3, and so on.
+Alouette opens these URLs today: about: pages (welcome, tasks, history, settings, keys, help), gopher, gophers, gemini and finger (Burrow), inquire (Inquire), net (NetTools), term, ssh, telnet and mosh (Terminal), and files, file, sftp, ftp, ftps, ftpes, dav, davs and s3 (Files). Each later milestone adds more: mailto and imap in M3, news in M4, and so on.
+
+## Terminal
+
+term: opens a shell on this computer. ssh: lists the hosts in your ~/.ssh/config and the ones saved under [[ssh.hosts]]; ssh://user@host connects. Alouette uses your SSH agent, your key files (asking for passphrases), known_hosts, ProxyJump and LocalForward, and asks before trusting a new host key. A changed host key is refused.
+
+While a terminal has the keyboard, every key goes to the program inside it. Press Ctrl+] and then a key to give that key to Alouette instead: Ctrl+] then k opens the palette, Ctrl+] then F6 goes to the next window. Shift+PgUp and Shift+PgDn scroll back. When a session ends, Enter closes the window and r reconnects.
+
+telnet://host connects with Telnet, VT100 and all. mosh://user@host runs the mosh program if it is installed.
+
+## Files
+
+Files shows two panes. The left starts in your home folder; the right shows the URL you opened, such as sftp://me@host/, ftp://ftp.gnu.org/gnu/, davs://cloud.example.com/remote.php/dav/files/me/ or s3://bucket/. Save sites under [[files.sites]] and open them with files:name.
+
+Tab switches panes. Enter opens a folder or shows a file, Backspace goes up, Space marks. c (or F5) copies the marked items, or the selected one, to the other pane, in the background; watch them in Tasks. n makes a folder, r renames, d deletes (after asking), o opens a path or URL in this pane, h shows hidden files, g reloads. A README in a folder is shown as you arrive, as Minuet did.
+
+FTP passwords travel in the clear: use ftpes:// (TLS on port 21) or ftps:// (TLS on port 990) when the server offers it. S3 keys come from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or ~/.aws/credentials; set an endpoint and region on a saved site for MinIO, R2 and other stores.
 
 ## Configuration
 

@@ -129,6 +129,7 @@ struct Inner {
     prefer_v6: bool,
     timeout: Duration,
     tls13_only: bool,
+    sessions: Arc<rustls::client::ClientSessionMemoryCache>,
 }
 
 impl Net {
@@ -147,6 +148,7 @@ impl Net {
                 prefer_v6: cfg.prefer_ipv6,
                 timeout: Duration::from_secs(cfg.connect_timeout_secs.clamp(1, 600)),
                 tls13_only,
+                sessions: Arc::new(rustls::client::ClientSessionMemoryCache::new(256)),
             }),
         })
     }
@@ -216,7 +218,9 @@ impl Net {
 
     /// Start TLS on an existing connection, as STARTTLS does.
     pub async fn handshake(&self, conn: Conn, opts: &TlsOptions) -> Result<TlsConn, NetError> {
-        let cfg = tls::client_config(opts.verify, self.inner.tls13_only, &opts.alpn)?;
+        let mut cfg = tls::client_config(opts.verify, self.inner.tls13_only, &opts.alpn)?;
+        // Shared, so FTPS data connections can resume the control connection's session.
+        cfg.resumption = rustls::client::Resumption::store(self.inner.sessions.clone());
         let name = opts.server_name.clone().unwrap_or_else(|| conn.info.host.clone());
         let name = name.trim_start_matches('[').trim_end_matches(']').to_string();
         let server_name = rustls::pki_types::ServerName::try_from(name.clone())

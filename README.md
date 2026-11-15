@@ -7,12 +7,12 @@ news and feeds, Gopher and Gemini, search and lookups, file transfer, SSH and Te
 network tools, contacts, a calendar, chat, the fediverse and an optional AI assistant, all in one
 window manager.
 
-> **Status: milestone M1 (small internet and NetTools).** The shell, the network layer and three
-> modules work today: **Burrow** (Gopher, Gemini, Finger), **Inquire** (one box that asks DNS,
-> RDAP, WHOIS, BGP, certificate logs, WebFinger, OpenPGP WKD, DICT, Veronica-2 and Gemini search at
-> once) and **NetTools** (ping, traceroute, DNS, ports, TLS inspection, mDNS). Mail, news, SSH and
-> the rest arrive milestone by milestone.
-> The internet modules arrive from M1 on. See the plan below.
+> **Status: milestone M2 (Terminal and Files).** The shell, the network layer and five modules
+> work today: **Burrow** (Gopher, Gemini, Finger), **Inquire** (one box that asks DNS, RDAP, WHOIS,
+> BGP, certificate logs, WebFinger, OpenPGP WKD, DICT, Veronica-2 and Gemini search at once),
+> **NetTools** (ping, traceroute, DNS, ports, TLS inspection, mDNS), **Terminal** (local shells,
+> SSH, Telnet, Mosh) and **Files** (two panes over local disks, SFTP, FTP/FTPS, WebDAV and S3).
+> Mail, news and the rest arrive milestone by milestone; see the plan below.
 
 ## Try it
 
@@ -32,6 +32,8 @@ downloads and watch them in the Tasks window, where you can cancel and retry the
 | Burrow | `gopher://gopher.floodgap.com/`, `gemini://geminiprotocol.net/`, `finger://graph.no/oslo` | Gopher (and `gophers://`), Gemini and Finger in one browser. Searches, Gemini input, redirects, back and forward, bookmarks, downloads through Tasks, and trust-on-first-use certificate pins that warn when a certificate changes. |
 | Inquire | `inquire:umn.edu`, `inquire:AS13335`, `inquire:@user@host`, `inquire:minuet` | Works out what you typed and asks every source that applies at once. Results stream in as they arrive. Anything typed into the command palette can be sent to Inquire. |
 | NetTools | `net:ping/example.org`, `net:dns/MX/umn.edu`, `net:tls/example.org` | A small command line: `ping`, `trace`, `dns`, `whois`, `rdap`, `asn`, `ports`, `tls` and `mdns`. |
+| Terminal | `term:`, `ssh:`, `ssh://me@host`, `telnet://telehack.com` | A VT220/xterm terminal for local shells, SSH, Telnet and Mosh. SSH reads `~/.ssh/config`, uses your agent and keys, checks `known_hosts`, hops through `ProxyJump` hosts and forwards ports, with post-quantum key exchange first. Ctrl+] then a key gives that key to Alouette. |
+| Files | `files:`, `sftp://me@host/`, `ftp://ftp.gnu.org/gnu/`, `davs://host/dav/`, `s3://bucket/` | Two panes, each on a local folder or a server. Copy whole folders either way in the background, make folders, rename and delete. A folder's README is shown as you arrive. FTPS (explicit and implicit), WebDAV (Nextcloud and friends) and S3 (AWS, MinIO, R2) with SigV4. |
 
 ## Three layouts, one set of windows
 

@@ -24,10 +24,12 @@ pub struct TestServer {
 }
 
 /// Session channels that run the echo shell (data on forwarded channels is left alone).
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct Conn {
     server: Option<TestServer>,
     shells: Arc<std::sync::Mutex<std::collections::HashSet<ChannelId>>>,
+    /// Session channels not yet given a shell or subsystem.
+    fresh: std::collections::HashMap<ChannelId, Channel<Msg>>,
 }
 
 impl Conn {
@@ -39,7 +41,7 @@ impl Conn {
 impl server::Server for TestServer {
     type Handler = Conn;
     fn new_client(&mut self, _: Option<SocketAddr>) -> Conn {
-        Conn { server: Some(self.clone()), shells: Default::default() }
+        Conn { server: Some(self.clone()), shells: Default::default(), fresh: Default::default() }
     }
 }
 
@@ -52,10 +54,13 @@ impl server::Handler for Conn {
 
     async fn channel_open_session(
         &mut self,
-        _channel: Channel<Msg>,
+        channel: Channel<Msg>,
         reply: server::ChannelOpenHandle,
         _session: &mut Session,
     ) -> Result<(), Self::Error> {
+        if self.s().sftp_root.is_some() {
+            self.fresh.insert(channel.id(), channel);
+        }
         reply.accept().await;
         Ok(())
     }
@@ -75,6 +80,7 @@ impl server::Handler for Conn {
     }
 
     async fn shell_request(&mut self, channel: ChannelId, session: &mut Session) -> Result<(), Self::Error> {
+        self.fresh.remove(&channel);
         session.channel_success(channel)?;
         self.shells.lock().unwrap_or_else(|e| e.into_inner()).insert(channel);
         session.data(channel, &b"Welcome to the test server\r\n$ "[..])
@@ -86,6 +92,7 @@ impl server::Handler for Conn {
         data: &[u8],
         session: &mut Session,
     ) -> Result<(), Self::Error> {
+        self.fresh.remove(&channel);
         session.channel_success(channel)?;
         let out = format!("ran {}\n", String::from_utf8_lossy(data));
         session.data(channel, out.into_bytes())?;
@@ -124,8 +131,13 @@ impl server::Handler for Conn {
         name: &str,
         session: &mut Session,
     ) -> Result<(), Self::Error> {
-        if name == "sftp" && self.s().sftp_root.is_some() {
-            session.channel_success(channel)
+        if name == "sftp"
+            && let Some(root) = self.s().sftp_root.clone()
+            && let Some(ch) = self.fresh.remove(&channel)
+        {
+            session.channel_success(channel)?;
+            tokio::spawn(russh_sftp::server::run(ch.into_stream(), crate::testsftp::Sftp::new(root)));
+            Ok(())
         } else {
             session.channel_failure(channel)
         }

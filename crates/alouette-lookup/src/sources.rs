@@ -587,7 +587,13 @@ mod tests {
         let open = l.local_addr().unwrap().port();
         let closed = std::net::TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
         assert!(matches!(check_port(&net, "127.0.0.1", open, Duration::from_secs(2)).await, PortState::Open(_)));
-        assert_eq!(check_port(&net, "127.0.0.1", closed, Duration::from_secs(2)).await, PortState::Closed);
+        let state = check_port(&net, "127.0.0.1", closed, Duration::from_secs(2)).await;
+        // Windows retries a refused connect for about two seconds, so it can look filtered.
+        if cfg!(windows) {
+            assert!(matches!(state, PortState::Closed | PortState::Filtered), "{state:?}");
+        } else {
+            assert_eq!(state, PortState::Closed);
+        }
         assert!(tcp_ping(&net, "127.0.0.1", open).await.is_ok());
     }
 }
