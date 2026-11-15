@@ -1,0 +1,56 @@
+# Alouette configuration.
+#
+# Every setting below shows its default. Delete anything you don't change.
+# Alouette reloads this file as soon as you save it.
+
+[general]
+# How windows are arranged: "desktop" (Minuet style), "tiled" or "tabs".
+layout = "desktop"
+# Built-in themes: minuet, turbo, amber, green, modern-dark, modern-light,
+# high-contrast, mono. Your own themes go in the "themes" folder next to this file.
+theme = "minuet"
+# Key binding preset: "cua" (F-keys and Alt menus, like Minuet), "vim" or "emacs".
+keymap = "cua"
+# Window borders: "theme", "rounded", "plain", "double", "thick" or "ascii".
+border = "theme"
+# Capture the mouse. Turn off to let your terminal handle text selection.
+mouse = true
+# Windows to open at startup, as URLs.
+startup = ["about:welcome"]
+# Show a clock in the status line.
+clock = true
+
+[nostalgia]
+# Turn this off to switch off every retro touch at once.
+enabled = true
+splash = true
+splash_ms = 1500
+# Call modules by Minuet's names: POPmail, NetNews, Gopher, Telnet.
+minuet_names = false
+shadows = true
+desktop_pattern = true
+# Modem handshake and new-mail chime. Never played over SSH unless you ask.
+sounds = false
+# Retro commands such as "archie", "veronica" and "minuet".
+easter_eggs = true
+
+[cache]
+# Keep mail and news on disk for offline reading and search. Off by default.
+enabled = false
+max_mb = 2048
+max_age_days = 365
+
+[ai]
+# Nothing is sent to any AI provider until you turn this on and pick a provider.
+enabled = false
+
+[network]
+prefer_ipv6 = true
+# "system", "doh", "dot" or "doq".
+dns = "system"
+connect_timeout_secs = 15
+
+[keys]
+# Override any key binding. Examples:
+# palette = "ctrl+p"
+# quit = ["alt+x", "ctrl+q"]

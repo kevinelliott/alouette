@@ -1,0 +1,34 @@
+---
+source: crates/alouette/tests/screens.rs
+expression: "render_to_string(&mut app(LayoutKind::Tiled, KeymapPreset::Cua), 100, 30)"
+---
+  ≡  File  Window  Modules  Options  Help
+┌──────────────────── Welcome ───────────────────── 1 ┐┌───────────── Demo: links ────────────── 2 ┐
+│     _    _                  _   _                  ▲││Every link goes through the URL router, whi│
+│    / \  | | ___  _   _  ___| |_| |_ ___            █││                                           │
+│   / _ \ | |/ _ \| | | |/ _ \ __| __/ _ \           █││ about:welcome                      The wel│
+│  / ___ \| | (_) | |_| |  __/ |_| ||  __/           █││ about:tasks                        Backgro│
+│ /_/   \_\_|\___/ \__,_|\___|\__|\__\___|           █││ about:minuet                       A short│
+│                                                    █││ demo:jobs                          Start s│
+│ Your whole internet desk, in one terminal.         █││ gopher://gopher.floodgap.com/      Floodga│
+│                                                    █││ gemini://geminiprotocol.net/       Project│
+│ Alouette brings mail, news, Gopher and Gemini, file█││ finger://example.org/              Finger │
+│ transfer, terminals, the web and more into one     █││                                           │
+│ terminal app, in the spirit of Minuet (1994). This █││                                           │
+│ is milestone M0, the foundation: the desktop,      █││                                           │
+│ layouts, palette, themes and background tasks.     █│└───────────────────────────────────────────┘
+│                                                    █│╔════════ Demo: background jobs ═════════ 3 ╗
+│ Getting around                                     ║│║Start a job. It runs in the background whil║
+│   ^K            Command palette: every command,    ║│║                                           ║
+│ window, theme and URL                              ║│║  d  Download    a 6 second fake download w║
+│   F10           Menu bar (or Alt plus the red      ║│║  f  Failing job fails half way, so you can║
+│ letter)                                            ║│║  l  Long job    runs until cancelled, with║
+│   F3            Open a URL, such as about:tasks or ║│║  b  Burst       starts five short download║
+│ demo:jobs                                          ║│║                                           ║
+│   F6            Next window                        ║│║  t  opens the Tasks window to cancel (c) o║
+│   Ctrl-F6       Switch layout: Desktop, Tiled, Tabs║│║                                           ║
+│   F5            Zoom the window                    ║│║                                           ║
+│   Ctrl-F5       Move or resize with the arrow keys ║│║                                           ║
+│ (Desktop)                                          ▼│║                                           ║
+└─────────────────────────────────────────────────────┘╚═══════════════════════════════════════════╝
+ F1 Help  F10 Menu  ^K Palette  d Download  f Fail  l Long  b Burst  t Tasks         tiled  │ 12:00

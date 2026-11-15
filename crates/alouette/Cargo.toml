@@ -1,0 +1,36 @@
+[package]
+name = "alouette"
+description = "A modern, single-binary internet suite for the terminal, in the spirit of Minuet"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+readme = "../../README.md"
+keywords = ["tui", "gopher", "gemini", "email", "terminal"]
+categories = ["command-line-utilities", "network-programming"]
+
+[[bin]]
+name = "alouette"
+path = "src/main.rs"
+
+[dependencies]
+alouette-core.workspace = true
+alouette-store.workspace = true
+alouette-ui.workspace = true
+alouette-nostalgia.workspace = true
+mod-demo.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+time.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+insta.workspace = true

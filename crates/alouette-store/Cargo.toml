@@ -1,0 +1,16 @@
+[package]
+name = "alouette-store"
+description = "Alouette storage: SQLite state, history, bookmarks and secrets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+rusqlite.workspace = true
+thiserror.workspace = true
+time.workspace = true
+tracing.workspace = true
+keyring = { version = "3", default-features = false, features = ["apple-native", "windows-native", "linux-native"] }
