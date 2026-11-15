@@ -132,6 +132,11 @@ impl TaskCtx {
 }
 
 impl TaskManager {
+    /// The app's event sender, for background work that is not a task.
+    pub fn events(&self) -> EventSender {
+        self.events.clone()
+    }
+
     pub fn new(events: EventSender) -> Self {
         Self { inner: Arc::new(Mutex::new(Inner { next_id: 1, entries: VecDeque::new() })), events, history_limit: 200 }
     }

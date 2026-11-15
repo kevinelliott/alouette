@@ -263,6 +263,94 @@ pub struct Route {
     pub via: String,
 }
 
+/// The terminal emulator used by local shells, SSH, Telnet and Mosh.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Terminal {
+    /// Program for local shells. Unset uses `$SHELL` (or `%COMSPEC%` on Windows).
+    pub shell: Option<String>,
+    /// Lines kept for scrolling back.
+    pub scrollback: usize,
+    /// What `TERM` says to the remote side.
+    pub term: String,
+}
+
+impl Default for Terminal {
+    fn default() -> Self {
+        Self { shell: None, scrollback: 10_000, term: "xterm-256color".into() }
+    }
+}
+
+/// SSH client settings.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Ssh {
+    /// Read hosts from `~/.ssh/config`.
+    pub import_config: bool,
+    /// Try keys held by the SSH agent first.
+    pub agent: bool,
+    /// Seconds between keepalives. 0 turns them off.
+    pub keepalive_secs: u64,
+    /// Hosts saved in Alouette, in addition to `~/.ssh/config`.
+    pub hosts: Vec<SshHost>,
+}
+
+impl Default for Ssh {
+    fn default() -> Self {
+        Self { import_config: true, agent: true, keepalive_secs: 30, hosts: vec![] }
+    }
+}
+
+/// A saved SSH host.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct SshHost {
+    /// What you type: `ssh://name`.
+    pub name: String,
+    pub host: String,
+    pub user: Option<String>,
+    pub port: Option<u16>,
+    /// Private key file.
+    pub identity: Option<String>,
+    /// Jump hosts, as in `ProxyJump`: `user@bastion:22,other`.
+    pub jump: Option<String>,
+    /// Local forwards, as in `-L`: `8080:localhost:80`.
+    pub forward: Vec<String>,
+}
+
+/// The Files module.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Files {
+    /// Show a README when you open a folder that has one, as Minuet's FTP client did.
+    pub readme_viewer: bool,
+    pub show_hidden: bool,
+    /// Transfers that run at the same time.
+    pub parallel_transfers: usize,
+    /// Saved sites: SFTP, FTP, FTPS, WebDAV and S3.
+    pub sites: Vec<Site>,
+}
+
+impl Default for Files {
+    fn default() -> Self {
+        Self { readme_viewer: true, show_hidden: false, parallel_transfers: 3, sites: vec![] }
+    }
+}
+
+/// A saved file site. Passwords and keys live in the secret store, not here.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct Site {
+    pub name: String,
+    /// `sftp://user@host/path`, `ftp://`, `ftps://`, `dav://`, `davs://` or
+    /// `s3://bucket/prefix`.
+    pub url: String,
+    /// For S3: the endpoint, such as `https://s3.us-east-1.amazonaws.com` or a MinIO URL.
+    pub endpoint: Option<String>,
+    /// For S3: the region used for signing.
+    pub region: Option<String>,
+}
+
 /// The whole configuration file.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[serde(default, deny_unknown_fields)]
@@ -272,6 +360,9 @@ pub struct Config {
     pub cache: Cache,
     pub ai: Ai,
     pub network: Network,
+    pub terminal: Terminal,
+    pub ssh: Ssh,
+    pub files: Files,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,

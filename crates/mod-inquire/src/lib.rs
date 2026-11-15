@@ -2,7 +2,7 @@
 //! `user@host`, a URL or plain words: every source that applies answers at once, and the
 //! results stream in as they arrive.
 
-pub mod input;
+pub use alouette_ui::input;
 pub mod inquire;
 pub mod report;
 

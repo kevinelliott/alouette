@@ -26,6 +26,7 @@ mod-demo.workspace = true
 mod-burrow.workspace = true
 mod-inquire.workspace = true
 mod-nettools.workspace = true
+mod-terminal.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 crossterm.workspace = true

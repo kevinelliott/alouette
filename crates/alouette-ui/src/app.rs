@@ -426,6 +426,13 @@ impl App {
     }
 
     fn handle_paste(&mut self, text: &str) {
+        let overlay = self.dialog.is_some() || self.palette.is_some() || self.menu.is_open();
+        if !overlay && let Some(id) = self.wm.focused() {
+            self.dirty = true;
+            if self.with_window(id, |w, cx| w.on_paste(text, cx)).map(|h| h.yes()).unwrap_or(false) {
+                return;
+            }
+        }
         for c in text.chars().filter(|c| !c.is_control()) {
             self.handle_key(KeyEvent::new(KeyCode::Char(c), KeyModifiers::NONE));
         }
@@ -473,6 +480,30 @@ impl App {
         }
         if self.move_mode {
             self.move_key(key);
+            return;
+        }
+
+        // Terminals see every key first and hand back the ones meant for Alouette.
+        let captured = self.pending.is_empty()
+            && self.wm.focused().and_then(|id| self.wm.get(id)).map(|m| m.win.captures_keys()).unwrap_or(false);
+        if captured {
+            let id = self.wm.focused().expect("focused window");
+            if self.with_window(id, |w, cx| w.on_key(key, cx)).map(|h| h.yes()).unwrap_or(false) {
+                return;
+            }
+            // Handed back: treat it as a shell shortcut. A plain key stands for its Ctrl form,
+            // so Ctrl+] then Tab works like Ctrl+Tab would, and Ctrl+] then p opens the palette.
+            let chord = KeyChord::from_event(&key);
+            let ctrl = KeyChord::from_event(&KeyEvent::new(key.code, key.modifiers | KeyModifiers::CONTROL));
+            for c in [chord, ctrl] {
+                if let Lookup::Action(a) = self.keymap.lookup(&[c]) {
+                    self.do_action(a);
+                    return;
+                }
+            }
+            if key.code == KeyCode::F(10) || key.code == KeyCode::Char('m') {
+                self.menu.open_menu(&self.menus, 0);
+            }
             return;
         }
 

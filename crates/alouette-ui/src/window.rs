@@ -151,6 +151,17 @@ pub trait Window: Send {
         None
     }
 
+    /// True when the window wants every key first, including Ctrl and function keys, as a
+    /// terminal does. The window returns [`Handled::No`] for keys it hands back to the shell.
+    fn captures_keys(&self) -> bool {
+        false
+    }
+
+    /// Handle pasted text. Return [`Handled::No`] to have it typed key by key.
+    fn on_paste(&mut self, _text: &str, _cx: &mut Cx) -> Handled {
+        Handled::No
+    }
+
     /// True while the window is typing text, so the shell leaves plain keys alone.
     fn wants_text(&self) -> bool {
         false

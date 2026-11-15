@@ -1,0 +1,28 @@
+[package]
+name = "mod-terminal"
+description = "Alouette's Terminal module: local shells, SSH, Telnet and Mosh"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-ui.workspace = true
+alouette-net.workspace = true
+alouette-term.workspace = true
+alouette-ssh.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+russh = "0.65"
+tokio = { workspace = true, features = ["io-util", "net"] }
+tracing.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+alouette-ssh = { workspace = true, features = ["test-server"] }
+alouette-core.workspace = true
+proto-telnet.workspace = true

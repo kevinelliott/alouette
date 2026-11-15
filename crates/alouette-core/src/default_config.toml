@@ -62,6 +62,32 @@ tls_min = "1.2"
 # hosts = ["*.onion"]
 # via = "socks5h://127.0.0.1:9050"
 
+[terminal]
+# shell = "/bin/zsh"          # unset uses $SHELL, or %COMSPEC% on Windows
+scrollback = 10000
+term = "xterm-256color"
+
+[ssh]
+import_config = true          # read hosts from ~/.ssh/config
+agent = true                  # try keys held by ssh-agent first
+keepalive_secs = 30
+# [[ssh.hosts]]
+# name = "web"
+# host = "web.example.org"
+# user = "deploy"
+# jump = "bastion.example.org"
+# forward = ["8080:localhost:80"]
+
+[files]
+readme_viewer = true          # show a folder's README when you open it, as Minuet did
+show_hidden = false
+parallel_transfers = 3
+# [[files.sites]]
+# name = "backups"
+# url = "s3://my-bucket/backups"
+# endpoint = "https://s3.us-east-1.amazonaws.com"
+# region = "us-east-1"
+
 [keys]
 # Override any key binding. Examples:
 # palette = "ctrl+p"

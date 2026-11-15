@@ -115,6 +115,7 @@ fn modules(paths: &Paths) -> Vec<Box<dyn Module>> {
         Box::new(mod_burrow::BurrowModule::new(paths.downloads_dir())),
         Box::new(mod_inquire::InquireModule),
         Box::new(mod_nettools::NetToolsModule),
+        Box::new(mod_terminal::TerminalModule),
         Box::new(mod_demo::DemoModule),
     ]
 }

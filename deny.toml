@@ -4,6 +4,11 @@ all-features = false
 [advisories]
 version = 2
 yanked = "deny"
+ignore = [
+  # rsa (through russh, for RSA SSH keys): a timing side channel on private-key operations.
+  # Alouette only signs SSH auth challenges locally; there is no fixed upstream release yet.
+  { id = "RUSTSEC-2023-0071", reason = "no fix available; local signing only" },
+]
 
 [licenses]
 version = 2

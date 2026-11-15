@@ -11,6 +11,7 @@ pub mod app;
 pub mod builtin;
 pub mod chrome;
 pub mod dialog;
+pub mod input;
 pub mod keymap;
 pub mod menu;
 pub mod module;
