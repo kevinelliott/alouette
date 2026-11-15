@@ -100,11 +100,7 @@ async fn ping(
         }
         let started = Instant::now();
         let result = match pinger.as_mut() {
-            Some(p) => p
-                .ping(ping_seq(seq), &[0u8; 56])
-                .await
-                .map(|(_, d)| d)
-                .map_err(|e| e.to_string()),
+            Some(p) => p.ping(ping_seq(seq), &[0u8; 56]).await.map(|(_, d)| d).map_err(|e| e.to_string()),
             None => sources::tcp_ping(net, &ip.to_string(), port).await.map(|(d, _)| d),
         };
         match result {

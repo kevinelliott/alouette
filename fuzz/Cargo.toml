@@ -1,0 +1,63 @@
+# Fuzz targets for the protocol parsers. Run with cargo-fuzz (nightly):
+#   cargo +nightly fuzz run gopher_menu
+[package]
+name = "alouette-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+proto-gopher = { path = "../crates/proto-gopher" }
+proto-gemini = { path = "../crates/proto-gemini" }
+proto-finger = { path = "../crates/proto-finger" }
+proto-whois = { path = "../crates/proto-whois" }
+alouette-lookup = { path = "../crates/alouette-lookup" }
+
+# Keep this out of the main workspace.
+[workspace]
+
+[[bin]]
+name = "gopher_menu"
+path = "fuzz_targets/gopher_menu.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "gopher_url"
+path = "fuzz_targets/gopher_url.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "gemtext"
+path = "fuzz_targets/gemtext.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "gemini_header"
+path = "fuzz_targets/gemini_header.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "finger_query"
+path = "fuzz_targets/finger_query.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "whois_answer"
+path = "fuzz_targets/whois_answer.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "inquire_query"
+path = "fuzz_targets/inquire_query.rs"
+test = false
+doc = false
