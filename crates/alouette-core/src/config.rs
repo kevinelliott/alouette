@@ -426,6 +426,42 @@ pub struct FeedSub {
     pub folder: Option<String>,
 }
 
+/// Inquire's web, reference and library sources.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Inquire {
+    /// The Wikipedia language edition to search, such as "en" or "fr". Empty turns it off.
+    pub wikipedia: String,
+    /// A SearXNG instance that allows the JSON format. Empty leaves it out.
+    pub searxng: String,
+    /// A library catalogue's SRU endpoint. Empty leaves it out.
+    pub sru: String,
+    /// Ask arXiv and Crossref about words too.
+    pub scholarly: bool,
+    /// Any engine with an OpenSearch RSS or Atom template.
+    pub opensearch: Vec<SearchEngine>,
+}
+
+impl Default for Inquire {
+    fn default() -> Self {
+        Self {
+            wikipedia: "en".into(),
+            searxng: String::new(),
+            sru: "http://lx2.loc.gov:210/LCDB".into(),
+            scholarly: true,
+            opensearch: vec![],
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct SearchEngine {
+    pub name: String,
+    /// The template, with {searchTerms} where the words go.
+    pub url: String,
+}
+
 /// The Web module.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -539,6 +575,7 @@ pub struct Config {
     pub feeds: Feeds,
     pub social: Social,
     pub web: Web,
+    pub inquire: Inquire,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,

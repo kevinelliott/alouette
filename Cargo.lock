@@ -150,6 +150,7 @@ name = "alouette-lookup"
 version = "0.1.0"
 dependencies = [
  "alouette-core",
+ "alouette-feeds",
  "alouette-net",
  "futures",
  "proto-dict",

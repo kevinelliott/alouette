@@ -2,6 +2,7 @@
 //! styled lines, some of them links, ready to show.
 
 pub mod query;
+pub mod reference;
 pub mod sources;
 pub mod tls;
 

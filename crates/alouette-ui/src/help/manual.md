@@ -22,7 +22,7 @@ Network work runs as tasks. The Tasks window lists them with progress. Select on
 
 ## URLs
 
-Alouette opens these URLs today: about: pages (welcome, tasks, history, settings, keys, help), gopher, gophers, gemini and finger (Burrow), inquire (Inquire), net (NetTools), term, ssh, telnet and mosh (Terminal), and files, file, sftp, ftp, ftps, ftpes, dav, davs and s3 (Files). Each later milestone adds more: mailto and imap in M3, news in M4, and so on.
+Alouette opens these URLs today: about: pages (welcome, tasks, history, settings, keys, help), gopher, gophers, gemini and finger (Burrow), inquire (Inquire), net (NetTools), term, ssh, telnet and mosh (Terminal), files, file, sftp, ftp, ftps, ftpes, dav, davs and s3 (Files), mail and mailto (Mail), news, nntp and nntps (News), feeds and feed (Feeds), social (Social), and http, https and web (Web).
 
 ## Terminal
 
@@ -51,6 +51,12 @@ In the writing window, Tab moves between the fields and the text, and Ctrl+B sho
 Gmail and Microsoft 365 sign in with OAuth, which needs an app of your own: create an OAuth client in Google Cloud (type Desktop app) or an app registration in Microsoft Entra (public client, with IMAP.AccessAsUser.All, SMTP.Send and offline_access), and put its client_id (and client_secret, for Google) on the account. Google opens your browser; Microsoft shows a code to type at microsoft.com/devicelogin.
 
 Mail is not saved on this computer unless you set mail.offline_cache = true, which keeps folder lists, message lists and the messages you open, so you can read them without a connection. Pictures in HTML mail are never fetched.
+
+## Inquire
+
+inquire:anything works out what you typed and asks every source that applies at once. A domain gets DNS, RDAP, TLS, certificate logs, WHOIS and the Wayback Machine; an IP address or AS number gets reverse DNS, routing and RDAP; user@host gets WebFinger, Finger, OpenPGP keys and mail servers; a web address gets TLS, DNS and its archived copies.
+
+Words go to Wikipedia, arXiv and Crossref for papers, the Library of Congress catalogue over SRU, DICT for definitions, Veronica-2 for Gopherspace and Kennedy for Geminispace. A DOI goes straight to Crossref and arXiv:2401.01234 straight to arXiv. Add a SearXNG instance or any OpenSearch engine under [inquire] to search the web as well. arXiv and OpenSearch results end with a link that follows the search as a feed, so new results show up in Feeds.
 
 ## News
 

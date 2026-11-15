@@ -117,6 +117,15 @@ refresh_mins = 60             # fetch feeds this often while the Feeds window is
 # url = "https://blog.rust-lang.org/feed.xml"
 # folder = "Rust"
 
+[inquire]
+wikipedia = "en"              # Wikipedia edition to search; "" leaves it out
+searxng = ""                  # a SearXNG instance that allows format=json
+sru = "http://lx2.loc.gov:210/LCDB"  # a library catalogue over SRU (Library of Congress)
+scholarly = true              # ask arXiv and Crossref about words
+# [[inquire.opensearch]]
+# name = "Marginalia"
+# url = "https://search.marginalia.nu/search?query={searchTerms}&format=rss"
+
 [web]
 home = ""                     # the page web: opens; empty shows the start page
 search = "https://html.duckduckgo.com/html/?q={}"  # where words typed as an address go

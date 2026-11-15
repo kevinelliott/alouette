@@ -4,8 +4,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
 use alouette_core::AppEvent;
+use alouette_core::config::Inquire;
 use alouette_core::event::ModulePayload;
-use alouette_lookup::{Query, QueryKind, Section, sources};
+use alouette_lookup::{Query, QueryKind, Section, reference, sources};
 use alouette_net::Net;
 use alouette_ui::window::{Cx, DrawCx, Handled, Window};
 use crossterm::event::{KeyCode, KeyEvent, MouseEvent};
@@ -40,6 +41,13 @@ pub enum Source {
     Dict,
     Veronica,
     GeminiSearch,
+    Wikipedia,
+    Wayback,
+    Arxiv,
+    Crossref,
+    Searx,
+    Sru,
+    OpenSearch(usize),
 }
 
 impl Source {
@@ -57,25 +65,61 @@ impl Source {
             Source::Dict => "DICT",
             Source::Veronica => "Veronica-2",
             Source::GeminiSearch => "Kennedy",
+            Source::Wikipedia => "Wikipedia",
+            Source::Wayback => "Wayback",
+            Source::Arxiv => "arXiv",
+            Source::Crossref => "Crossref",
+            Source::Searx => "SearXNG",
+            Source::Sru => "Library",
+            Source::OpenSearch(_) => "OpenSearch",
         }
     }
 
     /// The sources worth asking for a query, most useful first.
-    pub fn for_query(q: &Query) -> Vec<Source> {
+    pub fn for_query(q: &Query, cfg: &Inquire) -> Vec<Source> {
         use Source::*;
+        let mut words = vec![];
+        if let QueryKind::Words(w) = &q.kind {
+            if alouette_lookup::reference::doi(w).is_some() {
+                return vec![Crossref];
+            }
+            if w.to_ascii_lowercase().starts_with("arxiv:") {
+                return vec![Arxiv];
+            }
+            if !cfg.wikipedia.is_empty() {
+                words.push(Wikipedia);
+            }
+            if !cfg.searxng.is_empty() {
+                words.push(Searx);
+            }
+            words.extend((0..cfg.opensearch.len()).map(OpenSearch));
+            if !w.contains(' ') {
+                words.push(Dict);
+            }
+            if cfg.scholarly {
+                words.extend([Arxiv, Crossref]);
+            }
+            if !cfg.sru.is_empty() {
+                words.push(Sru);
+            }
+            words.extend([Veronica, GeminiSearch]);
+            if w.contains(' ') {
+                words.push(Dict);
+            }
+        }
         match &q.kind {
-            QueryKind::Domain(_) => vec![Dns, RdapDomain, Tls, Ct, Whois],
+            QueryKind::Domain(_) => vec![Dns, RdapDomain, Tls, Ct, Whois, Wayback],
             QueryKind::Ip(_) => vec![ReverseDns, Asn, RdapIp, Whois],
             QueryKind::Asn(_) => vec![Asn, RdapAsn],
             QueryKind::Address { .. } => vec![WebFinger, Finger, Wkd, Mx],
-            QueryKind::Url(u) if matches!(u.scheme(), "https" | "gemini") => vec![Tls, Dns],
+            QueryKind::Url(u) if u.scheme() == "https" || u.scheme() == "http" => vec![Tls, Dns, Wayback],
+            QueryKind::Url(u) if u.scheme() == "gemini" => vec![Tls, Dns],
             QueryKind::Url(_) => vec![Dns],
-            QueryKind::Words(w) if !w.contains(' ') => vec![Dict, Veronica, GeminiSearch],
-            QueryKind::Words(_) => vec![Veronica, GeminiSearch, Dict],
+            QueryKind::Words(_) => words,
         }
     }
 
-    pub async fn run(self, net: &Net, q: &Query) -> Section {
+    pub async fn run(self, net: &Net, q: &Query, cfg: &Inquire) -> Section {
         let host = q.host().unwrap_or_default();
         match (self, &q.kind) {
             (Source::Dns, _) => sources::dns_report(net, &host).await,
@@ -100,6 +144,17 @@ impl Source {
             (Source::Dict, QueryKind::Words(w)) => sources::dict(net, w).await,
             (Source::Veronica, QueryKind::Words(w)) => sources::veronica(net, w).await,
             (Source::GeminiSearch, QueryKind::Words(w)) => sources::gemini_search(net, w).await,
+            (Source::Wikipedia, QueryKind::Words(w)) => reference::wikipedia(net, &cfg.wikipedia, w).await,
+            (Source::Wayback, QueryKind::Url(u)) => reference::wayback(net, u.as_str()).await,
+            (Source::Wayback, _) => reference::wayback(net, &host).await,
+            (Source::Arxiv, QueryKind::Words(w)) => reference::arxiv(net, w).await,
+            (Source::Crossref, QueryKind::Words(w)) => reference::crossref(net, w).await,
+            (Source::Searx, QueryKind::Words(w)) => reference::searxng(net, &cfg.searxng, w).await,
+            (Source::Sru, QueryKind::Words(w)) => reference::sru(net, &cfg.sru, w).await,
+            (Source::OpenSearch(i), QueryKind::Words(w)) => match cfg.opensearch.get(i) {
+                Some(e) => reference::opensearch(net, &e.name, &e.url, w).await,
+                None => Section::nothing("OpenSearch", "OpenSearch", "not configured"),
+            },
             (s, _) => Section::nothing(s.name(), s.name(), "does not apply"),
         }
     }
@@ -148,7 +203,8 @@ impl InquireWindow {
         if q.raw.is_empty() {
             return;
         }
-        let srcs = Source::for_query(&q);
+        let cfg = cx.config.inquire.clone();
+        let srcs = Source::for_query(&q, &cfg);
         self.req = NEXT.fetch_add(1, Ordering::Relaxed);
         self.started = Some(Instant::now());
         self.report.clear();
@@ -160,12 +216,14 @@ impl InquireWindow {
         for (slot, src) in srcs.into_iter().enumerate() {
             let net = cx.net.clone();
             let q2 = q.clone();
+            let cfg2 = cfg.clone();
             let req = self.req;
             cx.tasks.spawn(MODULE, format!("Inquire {}: {}", src.name(), q.raw), move |ctx| {
                 let net = net.clone();
                 let q = q2.clone();
+                let cfg = cfg2.clone();
                 async move {
-                    let section = src.run(&net, &q).await;
+                    let section = src.run(&net, &q, &cfg).await;
                     let failed = section.lines.iter().any(|l| l.style == alouette_lookup::Style::Bad)
                         && section.lines.len() == 1;
                     let err = failed.then(|| section.lines[0].text.clone());
@@ -240,8 +298,8 @@ impl Window for InquireWindow {
         let waiting = self.report.waiting();
         if waiting > 0 {
             spans.push(Span::styled(format!("   {waiting} still answering"), t.dim()));
-        } else if let Some(q) = &self.query {
-            spans.push(Span::styled(format!("   {} sources answered", Source::for_query(q).len()), t.dim()));
+        } else if self.query.is_some() {
+            spans.push(Span::styled(format!("   {} sources answered", self.report.slots.len()), t.dim()));
         }
         frame.render_widget(Paragraph::new(Line::from(spans)).style(field), Rect { height: 1, ..area });
         if self.editing && cx.focused {
