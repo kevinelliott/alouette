@@ -103,6 +103,20 @@ fn decode(s: &str) -> String {
     url::form_urlencoded::parse(format!("x={s}").as_bytes()).next().map(|(_, v)| v.into_owned()).unwrap_or_default()
 }
 
+/// A `mailto:` URL for a draft's addresses and subject (not its body), so the Assistant can
+/// add a body it wrote.
+pub fn draft_url(d: &Draft) -> String {
+    let enc = |s: &str| url::form_urlencoded::byte_serialize(s.as_bytes()).collect::<String>().replace('+', "%20");
+    let mut q = vec![format!("to={}", enc(&d.to)), format!("subject={}", enc(&d.subject))];
+    if !d.cc.is_empty() {
+        q.push(format!("cc={}", enc(&d.cc)));
+    }
+    if let Some(id) = &d.in_reply_to {
+        q.push(format!("in-reply-to={}", enc(&format!("<{id}>"))));
+    }
+    format!("mailto:?{}", q.join("&"))
+}
+
 /// Read a `mailto:` URL (RFC 6068) into a draft.
 pub fn mailto(url: &Url) -> Draft {
     let mut d = Draft { to: decode(url.path()), ..Default::default() };
@@ -187,6 +201,22 @@ impl Module for MailModule {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn draft_url_round_trips() {
+        let d = Draft {
+            to: "Ann Lee <ann@example.org>".into(),
+            subject: "Re: Lunch & more".into(),
+            in_reply_to: Some("abc@x".into()),
+            ..Default::default()
+        };
+        let u = format!("{}&body=Hi%20there", draft_url(&d));
+        let back = mailto(&Url::parse(&u).unwrap());
+        assert_eq!(back.to, d.to);
+        assert_eq!(back.subject, d.subject);
+        assert_eq!(back.in_reply_to.as_deref(), Some("abc@x"));
+        assert_eq!(back.body, "Hi there");
+    }
 
     #[test]
     fn reads_mailto() {

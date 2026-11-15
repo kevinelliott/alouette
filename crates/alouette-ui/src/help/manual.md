@@ -110,6 +110,16 @@ Add a Matrix account with /matrix @you:matrix.org (and the homeserver's address 
 
 Mentions of your nick (or of the words in chat.highlights) and private messages raise a notification; chat.notify = "all" notifies for every line and "off" for none. chat.logs = true keeps a plain-text log of every buffer, one file a day, under the data folder's chat/logs; it is off unless you turn it on.
 
+## Assistant
+
+The Assistant is off until you choose a provider. Press F2 in any window (in a terminal, Ctrl+] first) and it opens with what that window shows: an email or news article, a mailbox or newsgroup listing, a feed item, a web page, a chat conversation or the terminal screen. The first time, it lists what it found: the claude, codex or gemini CLI on your PATH (they use their own sign-in), Ollama running on this machine, and the Anthropic, OpenAI-compatible and Gemini APIs, which ask for a key and keep it in your keychain. "Any command" runs a program of your choice, such as llm, with the prompt on its standard input. Choosing one sets ai.enabled = true; p in the Assistant changes it later.
+
+Then pick what to do: s summarizes, d drafts a reply (a few words of guidance are optional; r opens the draft in Mail or News, addressed and threaded), t triages a mailbox or group by what needs attention, e explains terminal output and suggests a next command, and a asks a question. f asks a follow-up about the answer. / is Ask Alouette: it searches mail kept offline (mail.offline_cache) on this machine and sends only the best matches with your question.
+
+Before anything goes out, the Assistant shows exactly what will be sent, with its size and estimated cost, and waits for Enter. Email addresses, phone numbers, IP addresses, card numbers and things that look like keys are replaced by placeholders first (ai.redact). The first time a module's content would leave the machine, it asks: y sends once, a allows that module from then on (ai.allow). ai.preview = false skips the preview for allowed modules. Local providers (Ollama, a command) never leave the machine and cost nothing.
+
+The header shows the month's requests and estimated cost, kept in the data folder's ai-usage.json. ai.monthly_budget stops sending once that many dollars are spent. Prices are built in for Anthropic models; for others set ai.price_in and ai.price_out (dollars per million tokens). The claude CLI reports its own cost. Other settings: ai.model, ai.base_url (for an OpenAI-compatible server such as LM Studio, or an Ollama elsewhere), ai.max_tokens and ai.max_chars (the most content sent at once).
+
 ## Configuration
 
 Settings live in alouette.toml. Run "alouette config path" to find it. Alouette reloads the file as soon as you save it. The Settings window changes common options for you and saves the file.
@@ -132,4 +142,4 @@ The splash screen, drop shadows, desktop pattern, Minuet's module names, sounds 
 
 ## Privacy
 
-Alouette sends no telemetry. The offline cache and AI features are off until you turn them on. Passwords and tokens are kept in your operating system's keychain.
+Alouette sends no telemetry. The offline cache and the Assistant are off until you turn them on, and the Assistant shows what it will send and asks before content leaves the machine. Passwords and tokens are kept in your operating system's keychain.

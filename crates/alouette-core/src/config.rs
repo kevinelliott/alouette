@@ -209,12 +209,55 @@ impl Default for Cache {
 }
 
 /// AI features. Nothing is sent anywhere until `enabled = true` and a provider is set.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Ai {
     pub enabled: bool,
-    /// Provider id, such as `claude-cli`, `ollama` or `anthropic`.
+    /// Provider id: `claude-cli`, `codex-cli`, `gemini-cli`, `command`, `ollama`, `openai`,
+    /// `anthropic` or `gemini`.
     pub provider: Option<String>,
+    /// The model to ask. Empty picks the provider's default.
+    pub model: Option<String>,
+    /// For `openai` (any OpenAI-compatible server) and `ollama`.
+    pub base_url: Option<String>,
+    /// For `command`: a program that reads the prompt on stdin and writes the answer.
+    pub command: Option<String>,
+    /// Show exactly what will be sent, and wait for a yes, before every request.
+    pub preview: bool,
+    /// Replace email addresses, phone numbers, IP addresses, card numbers and keys with
+    /// placeholders before sending.
+    pub redact: bool,
+    /// Modules whose content may be sent without asking first, such as `["news", "web"]`.
+    pub allow: Vec<String>,
+    /// Stop sending once this month's estimated cost reaches this many dollars. 0 means no limit.
+    pub monthly_budget: f64,
+    /// Price per million input and output tokens, when the built-in table does not know the model.
+    pub price_in: Option<f64>,
+    pub price_out: Option<f64>,
+    /// The longest answer to ask for, in tokens.
+    pub max_tokens: u32,
+    /// Send at most this many characters of content.
+    pub max_chars: usize,
+}
+
+impl Default for Ai {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            provider: None,
+            model: None,
+            base_url: None,
+            command: None,
+            preview: true,
+            redact: true,
+            allow: Vec::new(),
+            monthly_budget: 0.0,
+            price_in: None,
+            price_out: None,
+            max_tokens: 16000,
+            max_chars: 60_000,
+        }
+    }
 }
 
 /// Network behavior shared by every module.

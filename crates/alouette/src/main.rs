@@ -125,6 +125,7 @@ fn modules(paths: &Paths) -> Vec<Box<dyn Module>> {
         Box::new(mod_contacts::ContactsModule::new(paths.data_dir.clone())),
         Box::new(mod_calendar::CalendarModule::new(paths.data_dir.clone())),
         Box::new(mod_chat::ChatModule::new(paths.data_dir.clone())),
+        Box::new(mod_assistant::AssistantModule::new(paths.data_dir.clone(), paths.cache_dir.clone())),
         Box::new(mod_demo::DemoModule),
     ]
 }

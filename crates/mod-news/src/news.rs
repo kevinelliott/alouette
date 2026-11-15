@@ -9,7 +9,7 @@ use alouette_core::{AppEvent, Notification};
 use alouette_mail::message::{Parsed, parse};
 use alouette_ui::ask::Asker;
 use alouette_ui::input::{InputResult, LineInput};
-use alouette_ui::window::{Cx, DrawCx, Effect, Handled, Window};
+use alouette_ui::window::{AiContext, Cx, DrawCx, Effect, Handled, Window};
 use crossterm::event::{KeyCode, KeyEvent, MouseButton, MouseEvent, MouseEventKind};
 use proto_nntp::{Group, Overview, Selected};
 use ratatui::Frame;
@@ -656,6 +656,52 @@ impl Window for NewsWindow {
     }
     fn url(&self) -> Option<String> {
         Some(format!("news:{}", self.server.name))
+    }
+    fn ai_context(&self) -> Option<AiContext> {
+        if let Some(r) = &self.reader {
+            let p = &r.parsed;
+            let enc =
+                |s: &str| url::form_urlencoded::byte_serialize(s.as_bytes()).collect::<String>().replace('+', "%20");
+            let subject = if p.subject.to_lowercase().starts_with("re:") {
+                p.subject.clone()
+            } else {
+                format!("Re: {}", p.subject)
+            };
+            let mut reply = format!("mailto:{}?subject={}", enc(&p.from_addr), enc(&subject));
+            if let Some(id) = &p.message_id {
+                reply.push_str(&format!("&in-reply-to={}", enc(&format!("<{id}>"))));
+            }
+            return Some(AiContext {
+                module: NEWS.into(),
+                kind: "news article".into(),
+                title: p.subject.clone(),
+                text: format!(
+                    "From: {}\nNewsgroups: {}\nSubject: {}\n\n{}",
+                    p.from,
+                    self.group.clone().unwrap_or_default(),
+                    p.subject,
+                    p.text
+                ),
+                list: false,
+                reply_url: Some(reply),
+            });
+        }
+        let g = self.group.clone()?;
+        if self.over.is_empty() {
+            return None;
+        }
+        let text = self
+            .over
+            .iter()
+            .rev()
+            .take(200)
+            .map(|o| {
+                let unread = !self.is_read(o.number);
+                format!("{}{} | {} | {}", if unread { "[unread] " } else { "" }, o.date, o.from, o.subject)
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        Some(AiContext { module: NEWS.into(), kind: "newsgroup".into(), title: g, text, list: true, reply_url: None })
     }
     fn badge(&self) -> Option<String> {
         Some(self.conn.badge()).filter(|b| !b.is_empty())

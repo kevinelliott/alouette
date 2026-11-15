@@ -12,7 +12,7 @@ use alouette_mail::message::{Parsed, parse};
 use alouette_mail::{Backend, Draft, Flags, Folder, Role, Summary};
 use alouette_ui::ask::Asker;
 use alouette_ui::input::{InputResult, LineInput};
-use alouette_ui::window::{Cx, DrawCx, Handled, Window};
+use alouette_ui::window::{AiContext, Cx, DrawCx, Handled, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -771,6 +771,49 @@ impl Window for MailWindow {
     }
     fn url(&self) -> Option<String> {
         Some(format!("mail:{}", self.account.name))
+    }
+    fn ai_context(&self) -> Option<AiContext> {
+        if let Some(r) = &self.reader {
+            let p = &r.parsed;
+            let d = Draft::reply(p, false, &self.account.email);
+            let text =
+                format!("From: {} <{}>\nTo: {}\nSubject: {}\n\n{}", p.from, p.from_addr, p.to, p.subject, p.text);
+            return Some(AiContext {
+                module: MODULE.into(),
+                kind: "email".into(),
+                title: p.subject.clone(),
+                text,
+                list: false,
+                reply_url: Some(crate::draft_url(&d)),
+            });
+        }
+        if self.list.is_empty() {
+            return None;
+        }
+        let off = time::UtcOffset::current_local_offset().unwrap_or(time::UtcOffset::UTC);
+        let text = self
+            .list
+            .iter()
+            .take(200)
+            .map(|m| {
+                format!(
+                    "{}{} | {} | {}",
+                    if m.flags.seen { "" } else { "[unread] " },
+                    short_date(m.date, off),
+                    if m.from.is_empty() { &m.from_addr } else { &m.from },
+                    m.subject
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        Some(AiContext {
+            module: MODULE.into(),
+            kind: "mailbox".into(),
+            title: self.title(),
+            text,
+            list: true,
+            reply_url: None,
+        })
     }
     fn badge(&self) -> Option<String> {
         if self.offline {

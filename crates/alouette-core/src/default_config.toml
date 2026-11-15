@@ -42,7 +42,16 @@ max_age_days = 365
 
 [ai]
 # Nothing is sent to any AI provider until you turn this on and pick a provider.
+# Press F2 (Assistant) to choose one: a CLI such as claude, a local Ollama, or an API key.
 enabled = false
+# Show what will be sent and wait for a yes before each request.
+preview = true
+# Replace emails, phone numbers, IPs, card numbers and keys with placeholders first.
+redact = true
+# Modules whose content may go out without asking, such as ["news", "web"].
+allow = []
+# Stop once this month's estimated cost reaches this many dollars (0 = no limit).
+monthly_budget = 0.0
 
 [network]
 prefer_ipv6 = true

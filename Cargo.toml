@@ -41,6 +41,8 @@ mod-calendar = { path = "crates/mod-calendar", version = "0.1.0" }
 proto-irc = { path = "crates/proto-irc", version = "0.1.0" }
 alouette-matrix = { path = "crates/alouette-matrix", version = "0.1.0" }
 mod-chat = { path = "crates/mod-chat", version = "0.1.0" }
+alouette-ai = { path = "crates/alouette-ai", version = "0.1.0" }
+mod-assistant = { path = "crates/mod-assistant", version = "0.1.0" }
 
 proto-nntp = { path = "crates/proto-nntp", version = "0.1.0" }
 proto-smtp = { path = "crates/proto-smtp", version = "0.1.0" }

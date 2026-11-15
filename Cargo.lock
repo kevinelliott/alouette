@@ -100,6 +100,7 @@ dependencies = [
  "clap",
  "crossterm",
  "insta",
+ "mod-assistant",
  "mod-burrow",
  "mod-calendar",
  "mod-chat",
@@ -122,6 +123,19 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "alouette-ai"
+version = "0.1.0"
+dependencies = [
+ "alouette-ai",
+ "alouette-core",
+ "alouette-net",
+ "serde",
+ "serde_json",
+ "tokio",
+ "url",
 ]
 
 [[package]]
@@ -3671,6 +3685,19 @@ dependencies = [
  "rand_core 0.10.1",
  "sha3",
  "shake",
+]
+
+[[package]]
+name = "mod-assistant"
+version = "0.1.0"
+dependencies = [
+ "alouette-ai",
+ "alouette-core",
+ "alouette-ui",
+ "crossterm",
+ "ratatui",
+ "tokio",
+ "url",
 ]
 
 [[package]]

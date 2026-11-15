@@ -175,4 +175,44 @@ pub trait Window: Send {
     fn animates(&self) -> bool {
         false
     }
+
+    /// What the window shows, for the Assistant (summarize, draft a reply, explain). `None`
+    /// when there is nothing to work on. Only read when the person asks the Assistant.
+    fn ai_context(&self) -> Option<AiContext> {
+        None
+    }
+}
+
+/// Content a window hands to the Assistant.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct AiContext {
+    /// The module it comes from, for consent (`ai.allow`).
+    pub module: String,
+    /// What it is, such as "email", "news article", "web page", "terminal output".
+    pub kind: String,
+    pub title: String,
+    pub text: String,
+    /// True for a list of items (a mailbox, a group), where triage fits better than a summary.
+    pub list: bool,
+    /// Where a drafted reply goes, such as `mailto:ann@example.org?subject=Re:%20Lunch`.
+    pub reply_url: Option<String>,
+}
+
+static PENDING: std::sync::Mutex<Option<AiContext>> = std::sync::Mutex::new(None);
+
+/// Hand content to the Assistant window that opens next.
+pub fn set_ai_context(c: Option<AiContext>) {
+    if let Ok(mut p) = PENDING.lock() {
+        *p = c;
+    }
+}
+
+/// Take the content handed over by [`set_ai_context`].
+pub fn take_ai_context() -> Option<AiContext> {
+    PENDING.lock().ok().and_then(|mut p| p.take())
+}
+
+/// The empty context, set when the Assistant was opened from a window with nothing to offer.
+pub fn ai_context_pending() -> bool {
+    PENDING.lock().map(|p| p.is_some()).unwrap_or(false)
 }

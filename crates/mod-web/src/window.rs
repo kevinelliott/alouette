@@ -10,7 +10,7 @@ use alouette_html::layout::Options;
 use alouette_html::{FieldKind, Fx, Line as HLine, Page, layout};
 use alouette_net::ConnInfo;
 use alouette_net::web::{Browser, WebRequest};
-use alouette_ui::window::{Cx, DrawCx, Handled, Window};
+use alouette_ui::window::{AiContext, Cx, DrawCx, Handled, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -910,6 +910,23 @@ impl Window for WebWindow {
         } else {
             Some(format!("web:{}", self.url))
         }
+    }
+    fn ai_context(&self) -> Option<AiContext> {
+        // The reader view when there is one: less menu and footer to send.
+        let text = match (&self.reader_page, &self.full, &self.text) {
+            (Some(p), ..) => p.plain_text(),
+            (None, Some(p), _) => p.plain_text(),
+            (None, None, Some(t)) => t.clone(),
+            _ => return None,
+        };
+        Some(AiContext {
+            module: MODULE.into(),
+            kind: "web page".into(),
+            title: self.title.clone(),
+            text: format!("{}\n\n{text}", self.url),
+            list: false,
+            reply_url: None,
+        })
     }
     fn animates(&self) -> bool {
         self.loading.is_some()

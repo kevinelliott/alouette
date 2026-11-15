@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use alouette_ui::window::{Cx, DrawCx, Handled, Window};
+use alouette_ui::window::{AiContext, Cx, DrawCx, Handled, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -174,6 +174,21 @@ impl Window for TermWindow {
     }
     fn badge(&self) -> Option<String> {
         self.shared.badge()
+    }
+    fn ai_context(&self) -> Option<AiContext> {
+        let text = self.shared.parser().screen().contents();
+        let text = text.trim_end().to_string();
+        if text.is_empty() {
+            return None;
+        }
+        Some(AiContext {
+            module: self.module.into(),
+            kind: "terminal output".into(),
+            title: self.title.clone(),
+            text,
+            list: false,
+            reply_url: None,
+        })
     }
     fn captures_keys(&self) -> bool {
         matches!(self.shared.status(), Status::Running | Status::Connecting(_))

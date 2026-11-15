@@ -4,7 +4,7 @@
 use alouette_core::AppEvent;
 use alouette_core::config::{IrcNetwork, MatrixAccount};
 use alouette_ui::input::{InputResult, LineInput};
-use alouette_ui::window::{Cx, DrawCx, Handled, Window};
+use alouette_ui::window::{AiContext, Cx, DrawCx, Handled, Window};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use ratatui::Frame;
 use ratatui::layout::{Position, Rect};
@@ -790,6 +790,38 @@ impl Window for ChatWindow {
     }
     fn url(&self) -> Option<String> {
         Some("chat:".into())
+    }
+    fn ai_context(&self) -> Option<AiContext> {
+        let hub = self.hub.lock().ok()?;
+        let b = hub.nets.get(self.sel.net)?.buffers.get(self.sel.buf)?;
+        let lines: Vec<String> = b
+            .lines
+            .iter()
+            .rev()
+            .take(300)
+            .rev()
+            .filter(|l| !l.text.is_empty())
+            .map(|l| {
+                let text = proto_irc::format::strip(&l.text);
+                if l.from.is_empty() { text } else { format!("<{}> {text}", l.from) }
+            })
+            .collect();
+        if lines.is_empty() {
+            return None;
+        }
+        let mut text = String::new();
+        if !b.topic.is_empty() {
+            text.push_str(&format!("Topic: {}\n", b.topic));
+        }
+        text.push_str(&lines.join("\n"));
+        Some(AiContext {
+            module: MODULE.into(),
+            kind: "chat conversation".into(),
+            title: b.name.clone(),
+            text,
+            list: false,
+            reply_url: None,
+        })
     }
     fn wants_text(&self) -> bool {
         true

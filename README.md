@@ -7,7 +7,7 @@ news and feeds, Gopher and Gemini, search and lookups, file transfer, SSH and Te
 network tools, contacts, a calendar, chat, the fediverse and an optional AI assistant, all in one
 window manager.
 
-> **Status: milestone M7 (Chat).** The shell, the network layer and thirteen modules
+> **Status: milestone M8 (Assistant).** The shell, the network layer and fourteen modules
 > work today: **Burrow** (Gopher, Gemini, Finger), **Inquire** (one box that asks DNS, RDAP, WHOIS,
 > BGP, certificate logs, WebFinger, OpenPGP WKD, DICT, Veronica-2 and Gemini search at once),
 > **NetTools** (ping, traceroute, DNS, ports, TLS inspection, mDNS), **Terminal** (local shells,
@@ -15,7 +15,8 @@ window manager.
 > **Mail** (IMAP and SMTP, JMAP, Gmail and Microsoft 365), **News** (Usenet over NNTP),
 > **Feeds** (RSS, Atom and JSON Feed), **Social** (Mastodon and compatible servers), **Web**
 > (a text browser with reader mode), **Contacts** (CardDAV and LDAP), **Calendar** (CalDAV,
-> ICS subscriptions and invitations) and **Chat** (IRC and end-to-end encrypted Matrix). The rest
+> ICS subscriptions and invitations), **Chat** (IRC and end-to-end encrypted Matrix) and the
+> **Assistant** (opt-in AI through a local CLI, Ollama or an API key). The rest
 > arrive milestone by milestone; see the plan below.
 
 ## Try it
@@ -45,6 +46,7 @@ downloads and watch them in the Tasks window, where you can cancel and retry the
 | Contacts | `contacts:`, `contacts:Ada` | An address book kept as vCard files and synced with CardDAV (Nextcloud, iCloud, Fastmail, Radicale). Each card links to mail, the fediverse, SSH hosts and chat; LDAP directories can be searched and their people saved. Mail shows when a sender is in your contacts, and + adds one. |
 | Calendar | `calendar:`, `calendar:month`, `webcal://host/cal.ics` | Agenda, week and month views over local, CalDAV and followed ICS calendars, with repeating events, time zones and reminders. Invitations in mail are answered with Y, N or T: the event lands in your calendar and the organiser gets your answer. |
 | Chat | `chat:`, `ircs://irc.libera.chat/#alouette`, `matrix:r/room:matrix.org` | IRC networks and Matrix accounts side by side in one window, with a buffer list, nick list, completion and input history. IRC speaks IRCv3 (SASL PLAIN and EXTERNAL with a client certificate, server time, echo, chathistory) and reconnects by itself. Matrix rooms are end-to-end encrypted, with emoji verification of sessions and key backup recovery. Mentions raise notifications; logs are kept only if you turn them on. |
+| Assistant | F2 in any window, `ai:` | Off until you pick a provider: the claude, codex or gemini CLI, a local Ollama, any command, or the Anthropic, OpenAI-compatible or Gemini API. Summarizes, drafts replies, triages mailboxes, explains terminal output and answers questions, including over your cached mail. Shows exactly what will be sent with personal details redacted, asks per module, and keeps a monthly cost meter and budget. |
 | Web | `web:`, `https://en.wikipedia.org/` | A text web browser over HTTP/2 and HTTP/1.1. Reader mode, link hints, forms, cookies, history, bookmarks, downloads and save as Markdown. Pages that need JavaScript open in your own browser with one key. HTML mail uses the same renderer. |
 
 ## Three layouts, one set of windows
@@ -148,6 +150,7 @@ Rust 1.96 or newer. `cargo test --workspace` runs every test, including screen s
 | `alouette-pim` | vCard, iCalendar with recurrence, iTIP, CardDAV and CalDAV sync, LDAP |
 | `proto-irc` | IRC messages with IRCv3 tags, capability negotiation, SASL, formatting and a client state machine |
 | `alouette-matrix` | Matrix through the Matrix Rust SDK: sync, end-to-end encryption, verification, recovery |
+| `alouette-ai` | AI providers (CLIs, Ollama, OpenAI-compatible, Anthropic, Gemini), redaction, cost meter, cache search |
 | `mod-burrow`, `mod-inquire`, `mod-nettools`, `mod-contacts`, `mod-calendar`, `mod-chat` and the other `mod-` crates | The modules |
 | `mod-demo` | A small example module |
 

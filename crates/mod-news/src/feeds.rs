@@ -8,7 +8,7 @@ use alouette_core::{AppEvent, Notification};
 use alouette_feeds::{Feed, Item};
 use alouette_net::Net;
 use alouette_ui::input::{InputResult, LineInput};
-use alouette_ui::window::{Cx, DrawCx, Handled, Window};
+use alouette_ui::window::{AiContext, Cx, DrawCx, Handled, Window};
 use crossterm::event::{KeyCode, KeyEvent, MouseButton, MouseEvent, MouseEventKind};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -507,6 +507,39 @@ impl Window for FeedsWindow {
     }
     fn url(&self) -> Option<String> {
         Some("feeds:".into())
+    }
+    fn ai_context(&self) -> Option<AiContext> {
+        if let Some((it, ..)) = &self.reader {
+            let body =
+                if it.body.contains('<') { alouette_mail::message::html_to_text(&it.body) } else { it.body.clone() };
+            return Some(AiContext {
+                module: FEEDS.into(),
+                kind: "feed article".into(),
+                title: it.title.clone(),
+                text: format!("{}\n{}\n\n{body}", it.title, it.link.clone().unwrap_or_default()),
+                list: false,
+                reply_url: None,
+            });
+        }
+        let s = self.subs.get(self.fsel)?;
+        let items = self.items();
+        if items.is_empty() {
+            return None;
+        }
+        let text = items
+            .iter()
+            .take(100)
+            .map(|i| format!("{}{}", if self.is_read(&s.sub.url, &i.id) { "" } else { "[unread] " }, i.title))
+            .collect::<Vec<_>>()
+            .join("\n");
+        Some(AiContext {
+            module: FEEDS.into(),
+            kind: "feed".into(),
+            title: s.title(),
+            text,
+            list: true,
+            reply_url: None,
+        })
     }
     fn wants_text(&self) -> bool {
         self.add.is_some()

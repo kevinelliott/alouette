@@ -772,6 +772,14 @@ impl App {
                 self.edit_config(|c| c.general.theme = next);
             }
             Action::Redraw => {}
+            Action::Assistant => {
+                let ctx = self.wm.focused().and_then(|id| self.wm.get(id)).and_then(|m| {
+                    // The Assistant window itself has nothing to hand over.
+                    if m.win.module() == "assistant" { None } else { m.win.ai_context() }
+                });
+                crate::window::set_ai_context(Some(ctx.unwrap_or_default()));
+                self.open_url("ai:");
+            }
             _ => {}
         }
     }
@@ -1139,6 +1147,7 @@ fn coming_in(scheme: &str) -> Option<&'static str> {
         "http" | "https" => "M5",
         "webcal" | "caldav" | "carddav" | "ldap" | "ldaps" => "M6",
         "irc" | "ircs" | "matrix" | "xmpp" => "M7",
+        "ai" => "M8",
         _ => return None,
     })
 }
