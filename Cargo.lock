@@ -3316,6 +3316,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "proto-imap"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "proto-imap",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
+name = "proto-smtp"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "proto-smtp",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
 name = "proto-telnet"
 version = "0.1.0"
 

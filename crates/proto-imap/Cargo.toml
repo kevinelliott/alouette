@@ -1,0 +1,22 @@
+[package]
+name = "proto-imap"
+description = "A small async IMAP4rev1/IMAP4rev2 client for Alouette's Mail module"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+base64 = "0.22"
+thiserror.workspace = true
+tokio = { workspace = true, features = ["io-util", "time"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "net", "macros", "rt"] }
+proto-imap = { path = ".", features = ["test-server"] }
+
+[features]
+# An in-memory IMAP server for tests in this and other crates.
+test-server = ["tokio/net", "tokio/rt", "tokio/sync"]

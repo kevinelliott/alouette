@@ -1,0 +1,22 @@
+[package]
+name = "proto-smtp"
+description = "A small async SMTP submission client (RFC 5321, 6409) for Alouette's Mail module"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+base64 = "0.22"
+thiserror.workspace = true
+tokio = { workspace = true, features = ["io-util"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "net", "macros", "rt"] }
+proto-smtp = { path = ".", features = ["test-server"] }
+
+[features]
+# An in-memory SMTP server for tests in this and other crates.
+test-server = ["tokio/net", "tokio/rt"]
