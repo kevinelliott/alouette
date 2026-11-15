@@ -117,11 +117,13 @@ fn modules(paths: &Paths) -> Vec<Box<dyn Module>> {
         Box::new(mod_nettools::NetToolsModule),
         Box::new(mod_terminal::TerminalModule),
         Box::new(mod_files::FilesModule),
-        Box::new(mod_mail::MailModule::new(paths.cache_dir.clone())),
+        Box::new(mod_mail::MailModule::new(paths.cache_dir.clone(), paths.data_dir.clone())),
         Box::new(mod_news::NewsModule),
         Box::new(mod_news::FeedsModule),
         Box::new(mod_social::SocialModule),
         Box::new(mod_web::WebModule::new(paths.downloads_dir())),
+        Box::new(mod_contacts::ContactsModule::new(paths.data_dir.clone())),
+        Box::new(mod_calendar::CalendarModule::new(paths.data_dir.clone())),
         Box::new(mod_demo::DemoModule),
     ]
 }

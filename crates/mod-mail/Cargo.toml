@@ -14,6 +14,9 @@ alouette-ui.workspace = true
 alouette-net.workspace = true
 alouette-store.workspace = true
 alouette-mail.workspace = true
+alouette-pim.workspace = true
+mod-contacts.workspace = true
+jiff = "0.2"
 crossterm.workspace = true
 ratatui.workspace = true
 serde = { workspace = true }

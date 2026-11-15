@@ -356,12 +356,49 @@ impl App {
         Some(r)
     }
 
+    /// Run a closure on one module with a fresh context, then apply its effects.
+    fn with_module(&mut self, idx: usize, f: impl FnOnce(&mut dyn Module, &mut Cx)) {
+        let effects = {
+            let App { modules, theme, config, keymap, tasks, net, store, secrets, config_path, .. } = self;
+            let Some(m) = modules.get_mut(idx) else { return };
+            let mut cx = Cx {
+                theme,
+                config,
+                keymap,
+                tasks,
+                net,
+                store: store.as_ref(),
+                secrets_backend: secrets.backend(),
+                secrets,
+                config_path,
+                effects: vec![],
+            };
+            f(m.as_mut(), &mut cx);
+            cx.effects
+        };
+        self.apply_effects(effects, None);
+    }
+
+    /// Let each module start its background work. Call once, inside the runtime.
+    pub fn start_modules(&mut self) {
+        for i in 0..self.modules.len() {
+            self.with_module(i, |m, cx| m.start(cx));
+        }
+    }
+
+    fn modules_see(&mut self, ev: &AppEvent) {
+        for i in 0..self.modules.len() {
+            self.with_module(i, |m, cx| m.on_event(ev, cx));
+        }
+    }
+
     // ------------------------------------------------------------------ events
 
     pub fn handle_event(&mut self, ev: AppEvent) {
         match &ev {
             AppEvent::ConfigReloaded(cfg) => {
                 self.apply_config((**cfg).clone());
+                self.modules_see(&ev);
                 return;
             }
             AppEvent::ConfigError(e) => {
@@ -386,6 +423,9 @@ impl App {
         let ids: Vec<WinId> = self.wm.ordered().map(|m| m.id).collect();
         for id in ids {
             self.with_window(id, |w, cx| w.on_event(&ev, cx));
+        }
+        if matches!(ev, AppEvent::Module { .. }) {
+            self.modules_see(&ev);
         }
         self.dirty = true;
     }

@@ -23,6 +23,7 @@ where
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     let size = terminal.size()?;
     app.set_screen(ratatui::layout::Rect::new(0, 0, size.width, size.height));
+    app.start_modules();
 
     while !app.quit {
         if app.dirty {

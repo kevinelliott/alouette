@@ -95,6 +95,8 @@ pub struct Parsed {
     pub attachments: Vec<Attachment>,
     /// List-Unsubscribe, when present.
     pub unsubscribe: Option<String>,
+    /// An iCalendar part (an invitation or a reply to one), when there is one.
+    pub calendar: Option<String>,
 }
 
 pub fn parse(raw: &[u8]) -> Parsed {
@@ -124,6 +126,12 @@ pub fn parse(raw: &[u8]) -> Parsed {
     };
     let attachments = m
         .attachments()
+        .filter(|a| {
+            !a.content_type().is_some_and(|c| {
+                c.ctype().eq_ignore_ascii_case("text")
+                    && c.subtype().is_some_and(|s| s.eq_ignore_ascii_case("calendar"))
+            }) || a.attachment_name().is_some()
+        })
         .map(|a| Attachment {
             name: a.attachment_name().unwrap_or("unnamed").to_string(),
             mime: a
@@ -147,6 +155,18 @@ pub fn parse(raw: &[u8]) -> Parsed {
         from_html,
         attachments,
         unsubscribe: m.header_raw("List-Unsubscribe").map(|s| s.trim().to_string()),
+        calendar: m.parts.iter().find_map(|p| {
+            let ct = p.content_type();
+            let is = |t: &str, s: &str| {
+                ct.is_some_and(|c| {
+                    c.ctype().eq_ignore_ascii_case(t) && c.subtype().is_some_and(|x| x.eq_ignore_ascii_case(s))
+                })
+            };
+            let named = p.attachment_name().is_some_and(|n| n.to_ascii_lowercase().ends_with(".ics"));
+            (is("text", "calendar") || is("application", "ics") || named)
+                .then(|| String::from_utf8_lossy(p.contents()).into_owned())
+                .filter(|t| t.contains("BEGIN:VCALENDAR"))
+        }),
     }
 }
 
@@ -166,6 +186,8 @@ pub struct Draft {
     pub body: String,
     pub in_reply_to: Option<String>,
     pub references: Vec<String>,
+    /// An iCalendar part to send with the text, and its METHOD (such as REPLY).
+    pub calendar: Option<(String, String)>,
 }
 
 /// Split `a@x, "B, C" <b@y>; c@z` into addresses (with display names kept apart).
@@ -246,6 +268,22 @@ impl Draft {
             .subject(self.subject.clone())
             .message_id(id)
             .text_body(self.body.replace("\r\n", "\n"));
+        if let Some((method, ics)) = &self.calendar {
+            use mail_builder::headers::content_type::ContentType;
+            use mail_builder::mime::MimePart;
+            m = m.body(MimePart::new(
+                "multipart/alternative",
+                vec![
+                    MimePart::new("text/plain", self.body.replace("\r\n", "\n")),
+                    MimePart::new(
+                        ContentType::new("text/calendar")
+                            .attribute("method", method.clone())
+                            .attribute("charset", "utf-8"),
+                        ics.clone(),
+                    ),
+                ],
+            ));
+        }
         if !to.is_empty() {
             m = m.to(A::new_list(to));
         }

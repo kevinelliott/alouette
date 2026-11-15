@@ -35,6 +35,10 @@ proto-ftp = { path = "crates/proto-ftp", version = "0.1.0" }
 proto-imap = { path = "crates/proto-imap", version = "0.1.0" }
 alouette-feeds = { path = "crates/alouette-feeds", version = "0.1.0" }
 alouette-html = { path = "crates/alouette-html", version = "0.1.0" }
+alouette-pim = { path = "crates/alouette-pim", version = "0.1.0" }
+mod-contacts = { path = "crates/mod-contacts", version = "0.1.0" }
+mod-calendar = { path = "crates/mod-calendar", version = "0.1.0" }
+
 proto-nntp = { path = "crates/proto-nntp", version = "0.1.0" }
 proto-smtp = { path = "crates/proto-smtp", version = "0.1.0" }
 alouette-vfs = { path = "crates/alouette-vfs", version = "0.1.0" }

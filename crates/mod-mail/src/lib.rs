@@ -10,6 +10,7 @@
 pub mod bridge;
 pub mod cache;
 pub mod compose;
+pub mod invite;
 pub mod setup;
 pub mod window;
 
@@ -78,12 +79,14 @@ impl Shared {
 
 pub struct MailModule {
     cache_dir: PathBuf,
+    data_dir: PathBuf,
     shared: Shared,
 }
 
 impl MailModule {
-    pub fn new(cache_dir: PathBuf) -> Self {
-        Self { cache_dir, shared: Shared::default() }
+    /// `data_dir` is where contacts and calendars live, for invitations and senders.
+    pub fn new(cache_dir: PathBuf, data_dir: PathBuf) -> Self {
+        Self { cache_dir, data_dir, shared: Shared::default() }
     }
 }
 
@@ -156,7 +159,7 @@ impl Module for MailModule {
         let cache = Some(self.cache_dir.clone());
         if path.is_empty() {
             return Ok(match cx.config.mail.accounts.first().cloned() {
-                Some(a) => Box::new(window::MailWindow::new(a, self.shared.clone(), cache, cx)),
+                Some(a) => Box::new(window::MailWindow::new(a, self.shared.clone(), cache, self.data_dir.clone(), cx)),
                 None => Box::new(setup::SetupWindow::new()),
             });
         }
@@ -177,7 +180,7 @@ impl Module for MailModule {
             return Ok(Box::new(compose::ComposeWindow::new(acct, self.shared.clone(), pending, cx)));
         }
         let acct = find(cx, &decode(path))?.clone();
-        Ok(Box::new(window::MailWindow::new(acct, self.shared.clone(), cache, cx)))
+        Ok(Box::new(window::MailWindow::new(acct, self.shared.clone(), cache, self.data_dir.clone(), cx)))
     }
 }
 

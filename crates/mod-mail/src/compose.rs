@@ -40,6 +40,7 @@ pub struct ComposeWindow {
     origin: Option<u64>,
     in_reply_to: Option<String>,
     references: Vec<String>,
+    calendar: Option<(String, String)>,
     busy: Option<Job>,
     dirty: bool,
     confirm_close: bool,
@@ -94,6 +95,7 @@ impl ComposeWindow {
             origin: p.origin,
             in_reply_to: d.in_reply_to,
             references: d.references,
+            calendar: d.calendar,
             busy: None,
             dirty: false,
             confirm_close: false,
@@ -115,6 +117,7 @@ impl ComposeWindow {
             body: self.editor.text(),
             in_reply_to: self.in_reply_to.clone(),
             references: self.references.clone(),
+            calendar: self.calendar.clone(),
         }
     }
 
@@ -319,7 +322,11 @@ impl Window for ComposeWindow {
             Line::from(Span::styled(
                 format!(
                     " {}",
-                    self.note.clone().unwrap_or_else(|| "Ctrl+S sends · Ctrl+D saves a draft · Esc closes".into())
+                    self.note.clone().unwrap_or_else(|| {
+                        let cal =
+                            if self.calendar.is_some() { "Your answer to the invitation goes with it · " } else { "" };
+                        format!("{cal}Ctrl+S sends · Ctrl+D saves a draft · Esc closes")
+                    })
                 ),
                 t.dim(),
             ))

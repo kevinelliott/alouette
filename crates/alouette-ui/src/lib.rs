@@ -13,6 +13,7 @@ pub mod builtin;
 pub mod chrome;
 pub mod dialog;
 pub mod editor;
+pub mod form;
 pub mod input;
 pub mod keymap;
 pub mod menu;

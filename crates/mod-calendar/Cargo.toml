@@ -1,0 +1,25 @@
+[package]
+name = "mod-calendar"
+description = "Alouette's Calendar module: agenda, week and month views, CalDAV, ICS subscriptions and reminders"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+alouette-core.workspace = true
+alouette-net.workspace = true
+alouette-pim.workspace = true
+alouette-store.workspace = true
+alouette-ui.workspace = true
+mod-contacts.workspace = true
+crossterm.workspace = true
+jiff = "0.2"
+ratatui.workspace = true
+tokio = { workspace = true, features = ["fs"] }
+url.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros", "rt"] }

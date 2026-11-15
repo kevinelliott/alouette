@@ -22,7 +22,7 @@ Network work runs as tasks. The Tasks window lists them with progress. Select on
 
 ## URLs
 
-Alouette opens these URLs today: about: pages (welcome, tasks, history, settings, keys, help), gopher, gophers, gemini and finger (Burrow), inquire (Inquire), net (NetTools), term, ssh, telnet and mosh (Terminal), files, file, sftp, ftp, ftps, ftpes, dav, davs and s3 (Files), mail and mailto (Mail), news, nntp and nntps (News), feeds and feed (Feeds), social (Social), and http, https and web (Web).
+Alouette opens these URLs today: about: pages (welcome, tasks, history, settings, keys, help), gopher, gophers, gemini and finger (Burrow), inquire (Inquire), net (NetTools), term, ssh, telnet and mosh (Terminal), files, file, sftp, ftp, ftps, ftpes, dav, davs and s3 (Files), mail and mailto (Mail), news, nntp and nntps (News), feeds and feed (Feeds), social (Social), http, https and web (Web), contacts (Contacts), and calendar, webcal and webcals (Calendar).
 
 ## Terminal
 
@@ -83,6 +83,22 @@ Press o to go to an address. Words that are not an address are searched with web
 b goes back and F forward (Alt+Left and Alt+Right work too), r reloads, / finds text and n finds the next match. R switches reader mode, which keeps only the article; Alouette remembers your choice for each site, and web.reader turns it on everywhere. a bookmarks the page, B lists bookmarks and H shows history. s saves the page as Markdown and d downloads the selected link, both into your downloads folder; files that are not pages download by themselves. O opens the page, or the selected link, in your own browser, which is the way to read pages that need JavaScript; Alouette says when a page looks like one of those. i shows how you are connected.
 
 Cookies last until you quit. Mail written in HTML is shown through the same renderer, with each link's address after its text.
+
+## Contacts
+
+contacts: opens the address book: people on the left, the chosen card on the right. Cards are kept as vCard files in Alouette's data folder, in the local book or in a CardDAV book (Nextcloud, iCloud, Fastmail, Radicale and others) saved under [[contacts.books]] with its server and user name; Alouette asks for the password once and keeps it in your keychain, and syncs every contacts.sync_mins minutes and when you press g.
+
+a adds a card and e edits one; Tab moves between the fields and Ctrl+S saves. A card can hold mail addresses, phone numbers, fediverse handles (@you@server), SSH hosts (user@host, or the name of a saved host), chat addresses and web pages, and each becomes an action on the card: press its number, or Tab to the card and Enter. / finds people, d deletes, i imports a .vcf file and m writes to the selected person. L searches the LDAP directories under [[contacts.directories]], such as a company's; s saves a person found there. In Mail, a sender who is in your contacts is shown as such, and + adds the sender of the open message.
+
+## Calendar
+
+calendar: shows your agenda; v switches to the week and then the month, and 1, 2 and 3 pick one. Left and Right move a day, PgUp and PgDn a week (a month in the month view), t comes back to today and o goes to a day you type, such as 2026-03-14, fri or +7. The chosen event is shown below the view.
+
+a adds an event: a title, a day, a start and end time (leave the start empty for an all-day event), how it repeats (daily, weekdays, weekly, fortnightly, monthly, yearly, or an RRULE), where, a reminder in minutes, notes and the calendar it goes in. e edits the whole series, and d deletes, asking whether to delete one occurrence or every one. Reminders show as notifications while Alouette runs, whichever window you are in.
+
+Calendars live in Alouette's data folder: the local one, CalDAV calendars saved under [[calendar.accounts]], and calendars you follow by address, which are read-only. Press s and paste an address (webcal:// or https://) to follow one, or open a webcal:// link. i imports a .ics file. CalDAV calendars and followed ones refresh every calendar.sync_mins minutes and when you press g.
+
+When a message in Mail holds an invitation, the reader shows what, when, where and who, and Y accepts, N declines and T says maybe. Accepted events go in your first CalDAV calendar (or the local one), and a reply to the organiser opens ready to send with Ctrl+S. Answers to your own invitations update the guest list by themselves, and a cancellation can be taken out of your calendar with Y.
 
 ## Configuration
 

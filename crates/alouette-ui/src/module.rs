@@ -44,4 +44,11 @@ pub trait Module: Send {
 
     /// Build a window for a URL in one of this module's schemes.
     fn open(&mut self, url: &Url, cx: &mut Cx) -> Result<Box<dyn Window>, String>;
+
+    /// Called once when the app starts running, for work that goes on without a window,
+    /// such as calendar reminders.
+    fn start(&mut self, _cx: &mut Cx) {}
+
+    /// Every app event, after the windows have seen it. A reloaded config arrives here too.
+    fn on_event(&mut self, _ev: &alouette_core::AppEvent, _cx: &mut Cx) {}
 }

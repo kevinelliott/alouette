@@ -87,10 +87,14 @@ struct Reader {
     id: String,
     parsed: Parsed,
     scroll: u16,
+    invite: Option<crate::invite::Invite>,
+    /// The sender's name in the address book, if they are in it.
+    known: Option<String>,
 }
 
 pub struct MailWindow {
     id: u64,
+    data_dir: std::path::PathBuf,
     account: MailAccount,
     shared: Shared,
     cache: Option<Cache>,
@@ -148,7 +152,13 @@ fn long_date(t: Option<i64>, offset: time::UtcOffset) -> String {
 use alouette_ui::chrome::fit;
 
 impl MailWindow {
-    pub fn new(account: MailAccount, shared: Shared, cache_dir: Option<std::path::PathBuf>, cx: &mut Cx) -> Self {
+    pub fn new(
+        account: MailAccount,
+        shared: Shared,
+        cache_dir: Option<std::path::PathBuf>,
+        data_dir: std::path::PathBuf,
+        cx: &mut Cx,
+    ) -> Self {
         let id = next_id();
         let events = cx.tasks.events();
         let wake = events.clone();
@@ -159,6 +169,7 @@ impl MailWindow {
         let cache = cache_dir.filter(|_| cx.config.mail.offline_cache).map(|d| Cache::new(d, &account.name));
         let mut w = Self {
             id,
+            data_dir,
             account,
             shared,
             cache,
@@ -470,6 +481,46 @@ impl MailWindow {
         self.compose(d, of, cx);
     }
 
+    fn answer_invite(&mut self, partstat: &str, cx: &mut Cx) {
+        let Some(r) = &self.reader else { return };
+        let Some(inv) = r.invite.clone() else { return };
+        let message_id = r.parsed.message_id.clone();
+        let res = crate::invite::answer(
+            &inv,
+            partstat,
+            &self.account.email,
+            self.account.display_name.as_deref(),
+            &self.data_dir,
+            cx.config,
+        );
+        match res {
+            Ok(a) => {
+                calendar_changed(&cx.tasks.events());
+                if let Some(r) = &mut self.reader
+                    && let Some(i) = &mut r.invite
+                {
+                    i.answered = (partstat != "DECLINED" && i.method != alouette_pim::itip::Method::Cancel)
+                        .then(|| partstat.to_string());
+                }
+                if let Some((to, subject, body, ics)) = a.reply {
+                    let d = Draft {
+                        to,
+                        subject,
+                        body,
+                        in_reply_to: message_id.clone(),
+                        references: message_id.into_iter().collect(),
+                        calendar: Some(("REPLY".into(), ics)),
+                        ..Default::default()
+                    };
+                    self.compose(d, None, cx);
+                }
+                self.note = Some(a.note.clone());
+                cx.notify(Notification::success(a.note));
+            }
+            Err(e) => self.note = Some(e),
+        }
+    }
+
     fn submit_prompt(&mut self, cx: &mut Cx) {
         let Some((ask, input)) = self.prompt.take() else { return };
         let v = input.value.trim().to_string();
@@ -638,14 +689,22 @@ impl MailWindow {
         let Some(r) = &mut self.reader else { return };
         let p = &r.parsed;
         let head =
-            |k: &str, v: &str| Line::from(vec![Span::styled(format!("{k:<8}"), t.accent()), Span::raw(v.to_string())]);
-        let mut lines = vec![head("From", &format!("{} <{}>", p.from, p.from_addr)), head("To", &p.to)];
+            |k: &str, v: &str| Line::from(vec![Span::styled(format!("{k:<9}"), t.accent()), Span::raw(v.to_string())]);
+        let from = match &r.known {
+            Some(n) => Line::from(vec![
+                Span::styled(format!("{:<9}", "From"), t.accent()),
+                Span::raw(format!("{} <{}>", p.from, p.from_addr)),
+                Span::styled(format!("  · {n} in your contacts"), t.dim()),
+            ]),
+            None => head("From", &format!("{} <{}>", p.from, p.from_addr)),
+        };
+        let mut lines = vec![from, head("To", &p.to)];
         if !p.cc.is_empty() {
             lines.push(head("Cc", &p.cc));
         }
         lines.push(head("Date", &long_date(p.date, cx.local_offset)));
         lines.push(Line::from(vec![
-            Span::styled(format!("{:<8}", "Subject"), t.accent()),
+            Span::styled(format!("{:<9}", "Subject"), t.accent()),
             Span::styled(p.subject.clone(), Style::new().add_modifier(Modifier::BOLD)),
         ]));
         if !p.attachments.is_empty() {
@@ -655,6 +714,17 @@ impl MailWindow {
         }
         if p.from_html {
             lines.push(Line::from(Span::styled("Shown as text from HTML; remote images were not loaded.", t.dim())));
+        }
+        if let Some(inv) = &r.invite {
+            lines.push(Line::default());
+            for (i, l) in inv.lines.iter().enumerate() {
+                let st = if i == 0 { t.accent().add_modifier(Modifier::BOLD) } else { Style::new() };
+                lines.push(Line::from(vec![Span::styled("▌ ", t.accent()), Span::styled(l.clone(), st)]));
+            }
+            let h = crate::invite::hint(inv);
+            if !h.is_empty() {
+                lines.push(Line::from(vec![Span::styled("▌ ", t.accent()), Span::styled(h, t.dim())]));
+            }
         }
         lines.push(Line::default());
         for l in p.text.lines() {
@@ -666,6 +736,14 @@ impl MailWindow {
         r.scroll = r.scroll.min(total.saturating_sub(inner.height.max(1)));
         frame.render_widget(para.scroll((r.scroll, 0)), inner);
     }
+}
+
+/// Tell open Calendar windows that an invitation changed a calendar.
+fn calendar_changed(events: &EventSender) {
+    let _ = events.send(AppEvent::Module {
+        module: "calendar",
+        payload: alouette_core::event::ModulePayload::new(alouette_pim::Changed),
+    });
 }
 
 fn alouette_ui_size(n: usize) -> String {
@@ -712,6 +790,7 @@ impl Window for MailWindow {
             ("s", "Star"),
             ("m", "Move"),
             ("/", "Find"),
+            ("+", "Add sender"),
             ("Tab", "Pane"),
         ]
     }
@@ -862,6 +941,19 @@ impl Window for MailWindow {
                 let sig = self.account.signature.clone().map(|s| format!("\n\n-- \n{s}")).unwrap_or_default();
                 self.compose(Draft { body: sig, ..Default::default() }, None, cx);
             }
+            KeyCode::Char('Y') if self.reader.as_ref().is_some_and(|r| r.invite.is_some()) => {
+                self.answer_invite("ACCEPTED", cx)
+            }
+            KeyCode::Char('N') if self.reader.as_ref().is_some_and(|r| r.invite.is_some()) => {
+                self.answer_invite("DECLINED", cx)
+            }
+            KeyCode::Char('T') if self.reader.as_ref().is_some_and(|r| r.invite.is_some()) => {
+                self.answer_invite("TENTATIVE", cx)
+            }
+            KeyCode::Char('+') => match &self.reader {
+                Some(r) => cx.open_url(mod_contacts::people::add_url(&r.parsed.from, &r.parsed.from_addr)),
+                None => self.note = Some("Open a message to add its sender to your contacts".into()),
+            },
             KeyCode::Char('r') => self.reply(false, false, cx),
             KeyCode::Char('a') | KeyCode::Char('R') => self.reply(true, false, cx),
             KeyCode::Char('f') => self.reply(false, true, cx),
@@ -1011,7 +1103,16 @@ impl Window for MailWindow {
                     }
                     s.flags.seen = true;
                 }
-                self.reader = Some(Reader { folder, id, parsed: parse(&raw), scroll: 0 });
+                let parsed = parse(&raw);
+                let invite = parsed.calendar.as_deref().and_then(|c| crate::invite::read(c, &self.data_dir, cx.config));
+                if let Some(inv) = invite.as_ref().filter(|i| i.method == alouette_pim::itip::Method::Reply)
+                    && let Some(n) = crate::invite::apply_reply(inv, &self.data_dir)
+                {
+                    self.note = Some(n);
+                    calendar_changed(&cx.tasks.events());
+                }
+                let known = mod_contacts::people::by_email(&self.data_dir, &parsed.from_addr).map(|c| c.name);
+                self.reader = Some(Reader { folder, id, parsed, scroll: 0, invite, known });
             }
             Kind::Changed { folder } => {
                 if self.folder.as_deref() == Some(&folder) {

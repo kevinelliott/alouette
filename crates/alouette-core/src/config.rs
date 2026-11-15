@@ -524,6 +524,89 @@ pub struct SocialAccount {
     pub instance: String,
 }
 
+/// Contacts: the local address book, CardDAV books and LDAP directories.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Contacts {
+    /// Sync CardDAV books this often, in minutes, while a Contacts window is open.
+    pub sync_mins: u64,
+    /// Address books on CardDAV servers (Nextcloud, iCloud, Fastmail, Radicale).
+    pub books: Vec<DavAccount>,
+    /// LDAP directories to search, such as a company's.
+    pub directories: Vec<Directory>,
+}
+
+impl Default for Contacts {
+    fn default() -> Self {
+        Self { sync_mins: 15, books: vec![], directories: vec![] }
+    }
+}
+
+/// A CardDAV or CalDAV account. The password lives in the secret store.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct DavAccount {
+    pub name: String,
+    /// The server, or the collection itself: `https://cloud.example.com/remote.php/dav`.
+    pub url: String,
+    pub user: String,
+    /// The collection to use when the server has several; the first one otherwise.
+    pub collection: Option<String>,
+}
+
+/// An LDAP directory. The password, if any, lives in the secret store.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct Directory {
+    pub name: String,
+    /// `ldaps://ldap.example.com/dc=example,dc=com`: the server and where to search.
+    pub url: String,
+    /// The DN to bind as; empty searches anonymously.
+    pub bind_dn: String,
+}
+
+/// The Calendar module.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Calendar {
+    /// The first day of the week in the week and month views: "monday" or "sunday".
+    pub week_start: String,
+    /// Show reminders as notifications while Alouette runs.
+    pub reminders: bool,
+    /// The reminder new events get, in minutes before the start. 0 for none.
+    pub default_alarm_mins: u64,
+    /// Sync CalDAV calendars and refresh subscriptions this often, in minutes.
+    pub sync_mins: u64,
+    /// The view `calendar:` opens: "agenda", "week" or "month".
+    pub view: String,
+    /// CalDAV calendars.
+    pub accounts: Vec<DavAccount>,
+    /// Calendars to follow by address (ICS files, `webcal://`).
+    pub subscriptions: Vec<CalSub>,
+}
+
+impl Default for Calendar {
+    fn default() -> Self {
+        Self {
+            week_start: "monday".into(),
+            reminders: true,
+            default_alarm_mins: 10,
+            sync_mins: 15,
+            view: "agenda".into(),
+            accounts: vec![],
+            subscriptions: vec![],
+        }
+    }
+}
+
+/// A calendar followed by address.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct CalSub {
+    pub name: String,
+    pub url: String,
+}
+
 /// How an account connects.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
@@ -583,6 +666,8 @@ pub struct Config {
     pub social: Social,
     pub web: Web,
     pub inquire: Inquire,
+    pub contacts: Contacts,
+    pub calendar: Calendar,
     /// Key overrides: action name to one key or a list of keys, such as
     /// `palette = "ctrl+k"` or `quit = ["alt+x", "ctrl+q"]`.
     pub keys: BTreeMap<String, KeySpec>,

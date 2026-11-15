@@ -21,6 +21,9 @@ async fn main() {
         );
         imap.deliver(raw.as_bytes());
     }
+    // An invitation, for trying Y, N and T in the reader.
+    let invite = "From: Grace Hopper <grace@example.org>\r\nTo: me@example.org\r\nSubject: Invitation: Design review\r\nDate: Wed, 31 Jan 2024 09:00:00 +0000\r\nMessage-ID: <invite1@example.org>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"b1\"\r\n\r\n--b1\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nYou are invited to the design review.\r\n--b1\r\nContent-Type: text/calendar; charset=utf-8; method=REQUEST\r\n\r\nBEGIN:VCALENDAR\r\nVERSION:2.0\r\nMETHOD:REQUEST\r\nBEGIN:VEVENT\r\nUID:design-review@example.org\r\nDTSTART;TZID=Europe/London:20261117T150000\r\nDTEND;TZID=Europe/London:20261117T160000\r\nSUMMARY:Design review\r\nLOCATION:Room 4\r\nORGANIZER;CN=Grace Hopper:mailto:grace@example.org\r\nATTENDEE;CN=Me;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:me@example.org\r\nATTENDEE;CN=Alan Kay;PARTSTAT=ACCEPTED:mailto:alan@example.org\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n--b1--\r\n";
+    imap.deliver(invite.as_bytes());
     let ia = proto_imap::testserver::start(imap.clone()).await;
     let sa = proto_smtp::testserver::start(smtp.clone()).await;
     println!("imap = \"127.0.0.1:{}\"\nsmtp = \"127.0.0.1:{}\"", ia.port(), sa.port());

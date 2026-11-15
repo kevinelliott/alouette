@@ -142,6 +142,31 @@ fold_content_warnings = true  # keep posts with a content warning folded until o
 # name = "home"
 # instance = "mastodon.social"
 
+[contacts]
+sync_mins = 15                # sync CardDAV books this often while Contacts is open
+# [[contacts.books]]          # a CardDAV address book; the password is asked for once
+# name = "cloud"
+# url = "https://cloud.example.com/remote.php/dav"
+# user = "me"
+# [[contacts.directories]]    # an LDAP directory to search
+# name = "work"
+# url = "ldaps://ldap.example.com/dc=example,dc=com"
+# bind_dn = ""                # empty searches anonymously
+
+[calendar]
+week_start = "monday"         # or "sunday"
+reminders = true              # show reminders while Alouette runs
+default_alarm_mins = 10       # the reminder new events get; 0 for none
+sync_mins = 15                # sync CalDAV and refresh subscriptions this often
+view = "agenda"               # what calendar: opens: agenda, week or month
+# [[calendar.accounts]]       # a CalDAV calendar
+# name = "work"
+# url = "https://cloud.example.com/remote.php/dav"
+# user = "me"
+# [[calendar.subscriptions]]  # a calendar followed by address
+# name = "holidays"
+# url = "webcal://example.com/holidays.ics"
+
 [keys]
 # Override any key binding. Examples:
 # palette = "ctrl+p"
